@@ -201,10 +201,10 @@ export default function App() {
         </div>
       )}
 
-      <div className="main" style={role==='sv'?{gridColumn:'1/-1',gridTemplateColumns:'1fr',display:'flex',flexDirection:'column'}:{}}>
+      <div style={{gridColumn:role==='sv'?'1/-1':'auto',display:role==='sv'?'block':'grid',gridTemplateColumns:'1fr 300px',overflow:'hidden',position:'relative'}}>
         {role === 'sv' ? (
-          <div className="sup-grid" style={{height:'calc(100vh - 48px)',width:'100%'}}>
-            <div className="sup-quad">
+          <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gridTemplateRows:'1fr 1fr',gap:'1px',background:'var(--border)',height:'calc(100vh - 48px)',width:'100vw'}}>
+            <div style={{background:'var(--bg-surface)',overflowY:'auto',padding:16}}>
               <div className="quad-header">
                 <div className="quad-icon qi-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
                 <div><div className="quad-title">Operator workload</div><div className="quad-sub">5 MOCs on shift · 2 need attention</div></div>
@@ -229,7 +229,7 @@ export default function App() {
                 Rebalance workload
               </button>
             </div>
-            <div className="sup-quad">
+            <div style={{background:'var(--bg-surface)',overflowY:'auto',padding:16}}>
               <div className="quad-header">
                 <div className="quad-icon qi-green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
                 <div><div className="quad-title">Shift performance</div><div className="quad-sub">Day shift · 6h 32m elapsed</div></div>
@@ -245,7 +245,7 @@ export default function App() {
               ))}
               <button className="btn btn-neutral" style={{marginTop:12}} onClick={()=>toast('Shift audit report exported')}>Export shift audit report</button>
             </div>
-            <div className="sup-quad">
+            <div style={{background:'var(--bg-surface)',overflowY:'auto',padding:16}}>
               <div className="quad-header">
                 <div className="quad-icon qi-red"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
                 <div><div className="quad-title">Escalations — action needed</div><div className="quad-sub">3 items require your decision</div></div>
@@ -262,7 +262,7 @@ export default function App() {
                 </div>
               ))}
             </div>
-            <div className="sup-quad">
+            <div style={{background:'var(--bg-surface)',overflowY:'auto',padding:16}}>
               <div className="quad-header">
                 <div className="quad-icon qi-amber"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
                 <div><div className="quad-title">Fleet health — {vehicles.length} vehicles</div><div className="quad-sub">San Francisco · Live aggregate</div></div>
