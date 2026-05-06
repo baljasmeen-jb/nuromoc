@@ -118,7 +118,7 @@ export default function App() {
 
   const isSr = role==='sr'||role==='sv'
   const isSv = role==='sv'
-  const roleUsers = {op:'S.Chen / MOC-04', sr:'L.Wang / MOC-11', sv:'P.Krishnan / Supervisor'}
+  const roleUsers = {op:'Nathaniel / MOC-04', sr:'L.Wang / MOC-11', sv:'Emily / Supervisor'}
   const roleTagClass = {op:'role-tag-op', sr:'role-tag-sr', sv:'role-tag-sv'}
   const roleTagText = {op:'MOC Operator', sr:'Senior MOC', sv:'Supervisor'}
 
@@ -201,19 +201,19 @@ export default function App() {
         </div>
       )}
 
-      <div className="main" style={role==='sv'?{gridColumn:'1/-1',gridTemplateColumns:'1fr'}:{}}>
+      <div className="main" style={role==='sv'?{gridColumn:'1/-1',gridTemplateColumns:'1fr',display:'block'}:{}}>
         {role === 'sv' ? (
-          <div className="sup-grid">
+          <div className="sup-grid" style={{height:'calc(100vh - 48px)'}}>
             <div className="sup-quad">
               <div className="quad-header">
                 <div className="quad-icon qi-blue"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
                 <div><div className="quad-title">Operator workload</div><div className="quad-sub">5 MOCs on shift · 2 need attention</div></div>
               </div>
               {[
-                {init:'SC',name:'S. Chen',id:'MOC-04',detail:'3h 12m · Overloaded',cls:'overloaded',avcls:'av-red',load:85,alerts:5,acls:'ac-red'},
-                {init:'MO',name:'M. Okafor',id:'MOC-02',detail:'5h 44m · Moderate',cls:'moderate',avcls:'av-amber',load:55,alerts:3,acls:'ac-amber'},
-                {init:'JR',name:'J. Rivera',id:'MOC-07',detail:'1h 20m · Available',cls:'available',avcls:'av-green',load:18,alerts:1,acls:'ac-green'},
-                {init:'AP',name:'A. Patel',id:'MOC-09',detail:'2h 05m · Available',cls:'available',avcls:'av-green',load:12,alerts:1,acls:'ac-green'},
+                {init:'NB',name:'Nathaniel',id:'MOC-04',detail:'3h 12m · Overloaded',cls:'overloaded',avcls:'av-red',load:85,alerts:5,acls:'ac-red'},
+                {init:'MG',name:'Maggie',id:'MOC-02',detail:'5h 44m · Moderate',cls:'moderate',avcls:'av-amber',load:55,alerts:3,acls:'ac-amber'},
+                {init:'BR',name:'Brandon',id:'MOC-07',detail:'1h 20m · Available',cls:'available',avcls:'av-green',load:18,alerts:1,acls:'ac-green'},
+                {init:'JA',name:'Jasmeen',id:'MOC-09',detail:'2h 05m · Available',cls:'available',avcls:'av-green',load:12,alerts:1,acls:'ac-green'},
                 {init:'LW',name:'L. Wang',id:'Senior MOC',detail:'4h 30m · Available',cls:'available',avcls:'av-green',load:8,alerts:0,acls:'ac-green'},
               ].map(m=>(
                 <div key={m.init} className={`moc-row ${m.cls}`} onClick={()=>toast(`Opening ${m.name}'s queue`)}>
@@ -224,7 +224,7 @@ export default function App() {
                   <div style={{textAlign:'right'}}><div className={`alert-count ${m.acls}`}>{m.alerts}</div><div className="ac-label">alerts</div></div>
                 </div>
               ))}
-              <button className="btn btn-neutral" style={{marginTop:8}} onClick={()=>toast('2 alerts moved S.Chen → J.Rivera')}>
+              <button className="btn btn-neutral" style={{marginTop:8}} onClick={()=>toast('2 alerts moved Nathaniel → Brandon')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
                 Rebalance workload
               </button>
