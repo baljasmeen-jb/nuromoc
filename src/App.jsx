@@ -50,6 +50,12 @@ export default function App() {
   const [role, setRoleState] = useState('op')
   const [vehicles] = useState(INITIAL_VEHICLES)
   const [selectedVehicle, setSelectedVehicle] = useState(null)
+  const [activeZones, setActiveZones] = useState([
+    {id:'marathon',name:'SF Marathon — Hayes Valley to Embarcadero',color:'#EF4444',coords:[[-122.4194,37.7749],[-122.4094,37.7849],[-122.3994,37.7799],[-122.4094,37.7699],[-122.4194,37.7749]],expires:'17:00',vehicles:23,type:'Planned event'}
+  ])
+  const [zoneNameInput, setZoneNameInput] = useState('')
+  const [zoneType, setZoneType] = useState('Planned event')
+  const [zoneExpiry, setZoneExpiry] = useState('In 2 hours')
   const [activePanel, setActivePanel] = useState(null)
   const [activeNav, setActiveNav] = useState('fleet')
   const [tab, setTab] = useState('alerts')
@@ -120,6 +126,17 @@ export default function App() {
     setRoleState(r); setActivePanel(null); setSelectedVehicle(null); setActiveNav('fleet')
     toast(`Switched to ${roleTagText[r]} view`)
   }
+  const addZoneToMap = (zone) => {
+    if (!map.current || !map.current.loaded()) return
+    const srcId = 'zone-'+zone.id
+    const fillId = 'fill-'+zone.id
+    const lineId = 'line-'+zone.id
+    if (map.current.getSource(srcId)) return
+    map.current.addSource(srcId, {type:'geojson',data:{type:'Feature',geometry:{type:'Polygon',coordinates:[zone.coords]}}})
+    map.current.addLayer({id:fillId,type:'fill',source:srcId,paint:{'fill-color':zone.color,'fill-opacity':0.1}})
+    map.current.addLayer({id:lineId,type:'line',source:srcId,paint:{'line-color':zone.color,'line-width':2,'line-dasharray':[3,3],'line-opacity':0.7}})
+  }
+
   const openMod = (mod) => { setActivePanel(mod); setActiveNav(mod); setSelectedVehicle(null) }
   const closePanel = () => { setActivePanel(null); setActiveNav('fleet') }
 
@@ -304,22 +321,42 @@ export default function App() {
                 <div className="panel-header">
                   <button className="panel-back" onClick={closePanel}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg></button>
                   <div className="panel-title">Zone & blockage management</div>
-                  <div className="panel-badge" style={{background:'var(--red-dim)',color:'var(--red)'}}>1 active</div>
+                  <div className="panel-badge" style={{background:'var(--red-dim)',color:'var(--red)'}}>{activeZones.length} active</div>
                 </div>
                 <div className="sec-label">Active zones</div>
-                <div className="alert-card alert-p0" style={{marginBottom:14}}>
-                  <div className="alert-header"><span className="priority-tag pt0">ACTIVE</span><span className="alert-title">SF Marathon — Hayes Valley to Embarcadero</span></div>
-                  <div className="alert-meta">MOC-02 · 23 vehicles rerouted · Expires 17:00</div>
-                </div>
+                {activeZones.map(z=>(
+                  <div key={z.id} className="alert-card alert-p0" style={{marginBottom:6,borderLeftColor:z.color}}>
+                    <div className="alert-header"><span className="priority-tag pt0" style={{background:z.color+'22',color:z.color}}>ACTIVE</span><span className="alert-title">{z.name}</span></div>
+                    <div className="alert-meta">{z.vehicles} vehicles rerouted · Expires {z.expires} · {z.type}</div>
+                  </div>
+                ))}
                 <div className="sec-label">Create new zone</div>
-                <div className="form-row"><label className="form-label">Zone name</label><input className="form-input" placeholder="e.g. Valencia St flooding"/></div>
-                <div className="form-row"><label className="form-label">Type</label><select className="form-select"><option>Planned event</option><option>Hazard — flooding</option><option>Hazard — wildfire</option><option>Road closure</option></select></div>
+                <div className="form-row"><label className="form-label">Zone name</label><input className="form-input" placeholder="e.g. Valencia St flooding" value={zoneNameInput} onChange={e=>setZoneNameInput(e.target.value)}/></div>
+                <div className="form-row"><label className="form-label">Type</label><select className="form-select" value={zoneType} onChange={e=>setZoneType(e.target.value)}><option>Planned event</option><option>Hazard — flooding</option><option>Hazard — wildfire</option><option>Road closure</option></select></div>
                 <div style={{border:'1.5px dashed var(--border-strong)',borderRadius:8,height:90,background:'var(--bg-base)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:'var(--text-muted)',cursor:'crosshair',marginBottom:12}} onClick={()=>toast('Draw mode — click map to place zone corners')}>
                   Click to draw zone on live SF map
                 </div>
                 <div className="form-row"><label className="form-label">Expires</label><select className="form-select"><option>In 2 hours</option><option>In 4 hours</option><option>In 8 hours</option></select></div>
                 <div className="data-row"><span className="data-key">Vehicles affected</span><span className="data-val" style={{color:'var(--red)'}}>14 vehicles</span></div>
-                <button className="btn btn-primary" style={{marginTop:12}} onClick={()=>{toast('Zone activated — 14 vehicles rerouting');setTimeout(closePanel,1200)}}>Activate zone</button>
+                <button className="btn btn-primary" style={{marginTop:12}} onClick={()=>{
+                  const name = zoneNameInput || 'New zone'
+                  const colors = {'Planned event':'#F59E0B','Hazard — flooding':'#3B82F6','Hazard — wildfire':'#EF4444','Road closure':'#A78BFA'}
+                  const color = colors[zoneType] || '#EF4444'
+                  const center = [-122.43, 37.77]
+                  const offset = 0.015
+                  const newZone = {
+                    id: 'zone-'+Date.now(),
+                    name, color, type: zoneType,
+                    coords:[[center[0]-offset,center[1]-offset],[center[0]+offset,center[1]-offset],[center[0]+offset,center[1]+offset],[center[0]-offset,center[1]+offset],[center[0]-offset,center[1]-offset]],
+                    expires: zoneExpiry, vehicles: Math.floor(Math.random()*20)+5
+                  }
+                  setActiveZones(prev=>[...prev,newZone])
+                  addZoneToMap(newZone)
+                  map.current?.flyTo({center:[-122.43,37.77],zoom:13,duration:800})
+                  toast(`Zone "${name}" activated — vehicles rerouting`)
+                  setZoneNameInput('')
+                  setTimeout(closePanel,1400)
+                }}>Activate zone</button>
               </div>
 
               <div className={`panel ${activePanel==='emergency'?'open':''}`}>
