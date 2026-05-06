@@ -149,7 +149,7 @@ body{font-family:var(--font-sans);background:var(--bg-base);color:var(--text-pri
 .stat-label{font-size:10px;color:var(--text-muted);margin-bottom:3px}
 .stat-value{font-size:22px;font-weight:600;color:var(--text-primary);font-family:var(--font-mono);line-height:1}
 .stat-sub{font-size:10px;color:var(--text-muted);margin-top:2px}
-.sup-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:var(--border);height:100%;overflow:hidden}
+.sup-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:var(--border);height:calc(100vh - 48px);width:100%;overflow:hidden;position:absolute;inset:0;top:48px}
 .sup-quad{background:var(--bg-surface);overflow-y:auto;padding:16px}
 .quad-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .quad-icon{width:30px;height:30px;border-radius:var(--r-md);display:flex;align-items:center;justify-content:center;flex-shrink:0}
