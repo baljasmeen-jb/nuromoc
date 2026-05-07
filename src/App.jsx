@@ -42,6 +42,87 @@ function Toast({ msg }) {
   return <div className={`toast ${msg ? 'show' : ''}`}>{msg}</div>
 }
 
+function LocationDeviationMap({ reqLoc, actLoc, dist, dir, type, coords }) {
+  const containerRef = useRef(null)
+  const miniMapRef = useRef(null)
+
+  useEffect(() => {
+    if (!containerRef.current || miniMapRef.current) return
+    const req = coords?.req || [-122.4014, 37.7599]
+    const act = coords?.act || [-122.3994, 37.7609]
+    const centerLng = (req[0] + act[0]) / 2
+    const centerLat = (req[1] + act[1]) / 2
+
+    miniMapRef.current = new mapboxgl.Map({
+      container: containerRef.current,
+      style: 'mapbox://styles/mapbox/dark-v11',
+      center: [centerLng, centerLat],
+      zoom: 15.5,
+      interactive: false,
+      attributionControl: false,
+    })
+
+    miniMapRef.current.on('load', () => {
+      // Requested location — green pin
+      const reqEl = document.createElement('div')
+      reqEl.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#22C55E;border:2px solid #fff;box-shadow:0 0 8px rgba(34,197,94,0.6);'
+      new mapboxgl.Marker({element:reqEl}).setLngLat(req).addTo(miniMapRef.current)
+
+      // Actual location — red pin
+      const actEl = document.createElement('div')
+      actEl.style.cssText = 'width:14px;height:14px;border-radius:50%;background:#EF4444;border:2px solid #fff;box-shadow:0 0 8px rgba(239,68,68,0.6);'
+      new mapboxgl.Marker({element:actEl}).setLngLat(act).addTo(miniMapRef.current)
+
+      // Line between pins
+      miniMapRef.current.addSource('deviation-line', {
+        type: 'geojson',
+        data: {type:'Feature',geometry:{type:'LineString',coordinates:[req, act]}}
+      })
+      miniMapRef.current.addLayer({
+        id: 'deviation-line',
+        type: 'line',
+        source: 'deviation-line',
+        paint: {'line-color':'#EF4444','line-width':2,'line-dasharray':[3,2],'line-opacity':0.8}
+      })
+
+      // Distance label midpoint
+      miniMapRef.current.addSource('midpoint', {
+        type: 'geojson',
+        data: {type:'Feature',geometry:{type:'Point',coordinates:[centerLng, centerLat]},properties:{label:dist}}
+      })
+      miniMapRef.current.addLayer({
+        id: 'midpoint-label',
+        type: 'symbol',
+        source: 'midpoint',
+        layout: {'text-field':['get','label'],'text-size':11,'text-offset':[0,-1.2],'text-anchor':'bottom'},
+        paint: {'text-color':'#EF4444','text-halo-color':'#070C18','text-halo-width':2}
+      })
+    })
+
+    return () => { miniMapRef.current?.remove(); miniMapRef.current = null }
+  }, [])
+
+  return (
+    <div style={{marginBottom:10}}>
+      <div ref={containerRef} style={{height:130,borderRadius:8,overflow:'hidden',border:'1px solid rgba(255,255,255,0.08)',position:'relative'}}/>
+      <div style={{display:'flex',justifyContent:'space-between',marginTop:5,fontSize:10}}>
+        <div style={{display:'flex',alignItems:'center',gap:4,color:'var(--text-muted)'}}>
+          <span style={{width:8,height:8,borderRadius:'50%',background:'#22C55E',display:'inline-block'}}/>
+          Requested {type === 'pickup' ? 'pickup' : 'dropoff'}: {reqLoc}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:4,color:'var(--text-muted)'}}>
+          <span style={{width:8,height:8,borderRadius:'50%',background:'#EF4444',display:'inline-block'}}/>
+          Actual stop: {actLoc}
+        </div>
+      </div>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:6,marginTop:4,background:'rgba(239,68,68,0.08)',border:'1px solid rgba(239,68,68,0.2)',borderRadius:6,padding:'4px 8px'}}>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#EF4444" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span style={{fontSize:10,color:'var(--red)',fontWeight:500}}>{dist} deviation {dir} of requested location</span>
+      </div>
+    </div>
+  )
+}
+
 const OPERATORS = {
   'Nathaniel': {id:'MOC-04',avatar:'NB',shiftStart:'08:00',shiftDuration:'3h 12m',avgResponse:38,responseTarget:60,responseTrend:-37,alertsHandled:21,alertsOK:12,alertsEsc:2,zonesCreated:2,zoneTypes:'Concert + Flooding',tripsAssisted:15,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:1,incidentNote:'1x P2 · NURO-ONYX',etaInvestigated:6,etaBreakdown:[{label:'Traffic',count:3,color:'#22C55E'},{label:'Zone',count:2,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:2.1,fpAlerts:48,recallsIssued:1},
   'Maggie': {id:'MOC-02',avatar:'MG',shiftStart:'08:00',shiftDuration:'5h 44m',avgResponse:44,responseTarget:60,responseTrend:-12,alertsHandled:34,alertsOK:29,alertsEsc:3,zonesCreated:1,zoneTypes:'Marathon',tripsAssisted:22,tripsTrend:'up',shiftUptime:98,uptimeNote:'Minor sensor lag',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:9,etaBreakdown:[{label:'Traffic',count:5,color:'#22C55E'},{label:'Zone',count:3,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:3.2,fpAlerts:62,recallsIssued:0},
@@ -713,8 +794,8 @@ export default function App() {
                     <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:8}}>Alerts fire within 5 min of trip completion when deviation &gt;100m. Cannot be closed without classification.</div>
 
                     {[
-                      {id:'T-2839',vid:'V-15',type:'dropoff',dist:'143m',dir:'northeast',zone:'Potrero Hill',status:'unclassified',age:'12 min',reqLoc:'18th St & Connecticut St',actLoc:'18th St & Missouri St',aiConf:84,aiReason:'No stopping zone detected at requested location',zoneCheck:'No active zone at time of trip',passenger:'Significant — passenger walked 143m'},
-                      {id:'T-2801',vid:'V-22',type:'pickup',dist:'118m',dir:'south',zone:'Inner Richmond',status:'classified',age:'1h 4m',reqLoc:'Clement St & 6th Ave',actLoc:'Clement St & 7th Ave',aiConf:79,aiReason:'Double-parked vehicle blocking requested pickup location',zoneCheck:'No active zone at time of trip',passenger:'Minor — passenger waited 2 min extra'},
+                      {id:'T-2839',vid:'V-15',type:'dropoff',dist:'143m',dir:'northeast',zone:'Potrero Hill',status:'unclassified',age:'12 min',reqLoc:'18th St & Connecticut St',actLoc:'18th St & Missouri St',aiConf:84,aiReason:'No stopping zone detected at requested location',zoneCheck:'No active zone at time of trip',passenger:'Significant — passenger walked 143m',coords:{req:[-122.4014,37.7599],act:[-122.3994,37.7609]}},
+                      {id:'T-2801',vid:'V-22',type:'pickup',dist:'118m',dir:'south',zone:'Inner Richmond',status:'classified',age:'1h 4m',reqLoc:'Clement St & 6th Ave',actLoc:'Clement St & 7th Ave',aiConf:79,aiReason:'Double-parked vehicle blocking requested pickup location',zoneCheck:'No active zone at time of trip',passenger:'Minor — passenger waited 2 min extra',coords:{req:[-122.4624,37.7785],act:[-122.4644,37.7775]}},
                     ].filter(d=>locFilter==='all'||d.type===locFilter||(locFilter==='unclassified'&&d.status==='unclassified')).map(d=>(
                       <div key={d.id} style={{background:'var(--bg-elevated)',border:'1px solid var(--border)',borderRadius:'var(--r-lg)',padding:12,marginBottom:10,borderLeftWidth:3,borderLeftColor:'var(--purple)'}}>
                         <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
@@ -723,15 +804,14 @@ export default function App() {
                           <span style={{marginLeft:'auto',fontSize:10,color:'var(--text-muted)',fontFamily:'var(--font-mono)'}}>{d.age}</span>
                         </div>
 
-                        <div style={{background:'#070F1F',borderRadius:8,height:80,position:'relative',overflow:'hidden',marginBottom:10,border:'1px solid rgba(255,255,255,0.06)'}}>
-                          <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px)',backgroundSize:'20px 20px'}}/>
-                          <div style={{position:'absolute',top:'50%',left:0,right:0,height:4,background:'rgba(255,255,255,0.06)',transform:'translateY(-50%)'}}/>
-                          <div style={{position:'absolute',top:'50%',left:'25%',width:10,height:10,borderRadius:'50%',background:'#22C55E',border:'2px solid #fff',transform:'translate(-50%,-50%)',zIndex:2}} title="Requested location"/>
-                          <div style={{position:'absolute',top:'50%',left:'65%',width:10,height:10,borderRadius:'50%',background:'#EF4444',border:'2px solid #fff',transform:'translate(-50%,-50%)',zIndex:2}} title="Actual stop"/>
-                          <div style={{position:'absolute',top:'50%',left:'25%',width:'40%',height:0,borderTop:'2px dashed rgba(239,68,68,0.5)',transform:'translateY(-1px)'}}/>
-                          <div style={{position:'absolute',bottom:4,left:6,fontSize:8,color:'rgba(34,197,94,0.8)',fontFamily:'monospace'}}>● Requested</div>
-                          <div style={{position:'absolute',bottom:4,right:6,fontSize:8,color:'rgba(239,68,68,0.8)',fontFamily:'monospace'}}>● Actual (+{d.dist})</div>
-                        </div>
+                        <LocationDeviationMap
+                          reqLoc={d.reqLoc}
+                          actLoc={d.actLoc}
+                          dist={d.dist}
+                          dir={d.dir}
+                          type={d.type}
+                          coords={d.coords}
+                        />
 
                         <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:8}}>
                           <div style={{fontSize:10,color:'var(--text-muted)'}}>Requested: <span style={{color:'var(--green)',display:'block',fontFamily:'var(--font-mono)',fontSize:9}}>{d.reqLoc}</span></div>
