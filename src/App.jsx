@@ -339,7 +339,7 @@ function LocationDeviationMap({ reqLoc, actLoc, dist, dir, type, coords }) {
 }
 
 const OPERATORS = {
-  'Team Nuro Mission Operators': {id:'MOC-04',avatar:'TN',shiftStart:'08:00',shiftDuration:'3h 12m',avgResponse:38,responseTarget:60,responseTrend:-37,alertsHandled:21,alertsOK:12,alertsEsc:2,zonesCreated:2,zoneTypes:'Concert + Flooding',tripsAssisted:15,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:1,incidentNote:'1x P2 · NURO-ONYX',etaInvestigated:6,etaBreakdown:[{label:'Traffic',count:3,color:'#22C55E'},{label:'Zone',count:2,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:2.1,fpAlerts:48,recallsIssued:1},
+  'Nathaniel': {id:'MOC-04',avatar:'NB',shiftStart:'08:00',shiftDuration:'3h 12m',avgResponse:38,responseTarget:60,responseTrend:-37,alertsHandled:21,alertsOK:12,alertsEsc:2,zonesCreated:2,zoneTypes:'Concert + Flooding',tripsAssisted:15,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:1,incidentNote:'1x P2 · NURO-ONYX',etaInvestigated:6,etaBreakdown:[{label:'Traffic',count:3,color:'#22C55E'},{label:'Zone',count:2,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:2.1,fpAlerts:48,recallsIssued:1},
   'Maggie': {id:'MOC-02',avatar:'MG',shiftStart:'08:00',shiftDuration:'5h 44m',avgResponse:44,responseTarget:60,responseTrend:-12,alertsHandled:34,alertsOK:29,alertsEsc:3,zonesCreated:1,zoneTypes:'Marathon',tripsAssisted:22,tripsTrend:'up',shiftUptime:98,uptimeNote:'Minor sensor lag',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:9,etaBreakdown:[{label:'Traffic',count:5,color:'#22C55E'},{label:'Zone',count:3,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:3.2,fpAlerts:62,recallsIssued:0},
   'Brandon': {id:'MOC-07',avatar:'BR',shiftStart:'09:00',shiftDuration:'1h 20m',avgResponse:29,responseTarget:60,responseTrend:-52,alertsHandled:8,alertsOK:8,alertsEsc:0,zonesCreated:0,zoneTypes:'None yet',tripsAssisted:6,tripsTrend:'neutral',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:2,etaBreakdown:[{label:'Traffic',count:2,color:'#22C55E'},{label:'Zone',count:0,color:'#F59E0B'},{label:'AV',count:0,color:'#3B82F6'}],falsePositiveRate:0,fpAlerts:8,recallsIssued:0},
   'Jasmeen': {id:'MOC-09',avatar:'JA',shiftStart:'09:00',shiftDuration:'2h 05m',avgResponse:31,responseTarget:60,responseTrend:-48,alertsHandled:12,alertsOK:11,alertsEsc:1,zonesCreated:1,zoneTypes:'Road closure',tripsAssisted:9,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:3,etaBreakdown:[{label:'Traffic',count:2,color:'#22C55E'},{label:'Zone',count:1,color:'#F59E0B'},{label:'AV',count:0,color:'#3B82F6'}],falsePositiveRate:1.2,fpAlerts:12,recallsIssued:0}
@@ -528,7 +528,7 @@ export default function App() {
 
   const isSr = role==='sr'||role==='sv'
   const isSv = role==='sv'
-  const roleUsers = {op:'Team Nuro Mission Ops', sr:'L.Wang / MOC-11', sv:'Emily / Supervisor'}
+  const roleUsers = {op:'Nathaniel / MOC-04', sr:'L.Wang / MOC-11', sv:'Emily / Supervisor'}
   const roleTagClass = {op:'role-tag-op', sr:'role-tag-sr', sv:'role-tag-sv'}
   const roleTagText = {op:'MOC Operator', sr:'Senior MOC', sv:'Supervisor'}
 
@@ -627,7 +627,7 @@ export default function App() {
                 <div><div className="quad-title">Operator workload</div><div className="quad-sub">5 MOCs on shift · 2 need attention</div></div>
               </div>
               {[
-                {init:'TN',name:'Team Nuro Mission Operators',id:'MOC-04',detail:'3h 12m · Overloaded',cls:'overloaded',avcls:'av-red',load:85,alerts:5,acls:'ac-red'},
+                {init:'NB',name:'Nathaniel',id:'MOC-04',detail:'3h 12m · Overloaded',cls:'overloaded',avcls:'av-red',load:85,alerts:5,acls:'ac-red'},
                 {init:'MG',name:'Maggie',id:'MOC-02',detail:'5h 44m · Moderate',cls:'moderate',avcls:'av-amber',load:55,alerts:3,acls:'ac-amber'},
                 {init:'BR',name:'Brandon',id:'MOC-07',detail:'1h 20m · Available',cls:'available',avcls:'av-green',load:18,alerts:1,acls:'ac-green'},
                 {init:'JA',name:'Jasmeen',id:'MOC-09',detail:'2h 05m · Available',cls:'available',avcls:'av-green',load:12,alerts:1,acls:'ac-green'},
@@ -641,7 +641,7 @@ export default function App() {
                   <div style={{textAlign:'right'}}><div className={`alert-count ${m.acls}`}>{m.alerts}</div><div className="ac-label">alerts</div></div>
                 </div>
               ))}
-              <button className="btn btn-neutral" style={{marginTop:8}} onClick={()=>toast('2 alerts moved Team Nuro Ops → Brandon')}>
+              <button className="btn btn-neutral" style={{marginTop:8}} onClick={()=>toast('2 alerts moved Nathaniel → Brandon')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
                 Rebalance workload
               </button>
@@ -708,33 +708,6 @@ export default function App() {
               <div style={{position:'absolute',top:12,left:12,zIndex:10,background:'rgba(7,12,24,0.85)',border:'1px solid rgba(239,68,68,0.4)',borderRadius:8,padding:'5px 10px',display:'flex',alignItems:'center',gap:6}}>
                 <div style={{width:7,height:7,borderRadius:'50%',background:'var(--red)'}}/>
                 <span style={{fontSize:11,color:'var(--red)',fontFamily:'var(--font-mono)'}}>SF Marathon zone active — expires 17:00</span>
-              </div>
-
-              {/* Profile card — top right of map */}
-              <div style={{position:'absolute',top:12,right:12,zIndex:20,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
-                <div style={{background:'rgba(13,21,38,0.95)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'10px 14px',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',gap:10,cursor:'pointer',transition:'border-color .15s',minWidth:200}}
-                  onClick={()=>setSelectedOperator(role==='op'?'Team Nuro Mission Operators':role==='sr'?'L.Wang':'Emily')}
-                  onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(59,130,246,0.4)'}
-                  onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}
-                  title="View my shift performance">
-                  {/* Avatar */}
-                  <div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#1B6FE8,#0D4DB5)',border:'2px solid rgba(59,130,246,0.5)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#fff',flexShrink:0,position:'relative'}}>
-                    {role==='op'?'TN':role==='sr'?'LW':'EM'}
-                    <div style={{position:'absolute',bottom:0,right:0,width:10,height:10,borderRadius:'50%',background:'#22C55E',border:'2px solid #0D1526'}}/>
-                  </div>
-                  <div>
-                    <div style={{fontSize:12,fontWeight:600,color:'#F0F4FF'}}>
-                      {role==='op'?'Team Nuro Mission Ops':role==='sr'?'L. Wang':role==='sv'?'Emily':''}
-                    </div>
-                    <div style={{fontSize:10,color:'var(--text-muted)',marginTop:1}}>
-                      {role==='op'?'MOC-04 · On shift 3h 12m':role==='sr'?'Senior MOC · On shift 4h 30m':'Supervisor · Day shift'}
-                    </div>
-                    <div style={{fontSize:9,color:'var(--blue)',marginTop:2,display:'flex',alignItems:'center',gap:3}}>
-                      <div style={{width:4,height:4,borderRadius:'50%',background:'var(--blue)'}}/>
-                      View my shift stats ▸
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {selectedVehicle && (
