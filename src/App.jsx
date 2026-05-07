@@ -175,6 +175,10 @@ export default function App() {
   const [searchDone, setSearchDone] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [causeSel, setCauseSel] = useState(null)
+  const [tripView, setTripView] = useState('eta')
+  const [locCause, setLocCause] = useState(null)
+  const [escalated, setEscalated] = useState({})
+  const [locFilter, setLocFilter] = useState('all')
   const [selectedOperator, setSelectedOperator] = useState(null)
   const toastTimer = useRef(null)
 
@@ -619,83 +623,168 @@ export default function App() {
                 <div className="panel-header">
                   <button className="panel-back" onClick={closePanel}><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="15 18 9 12 15 6"/></svg></button>
                   <div className="panel-title">Trip intelligence</div>
-                  <div className="panel-badge" style={{background:'var(--amber-dim)',color:'var(--amber)'}}>3 ETA · 1 location</div>
+                  <div className="panel-badge" style={{background:'var(--amber-dim)',color:'var(--amber)'}}>3 ETA · 2 location</div>
                 </div>
 
-                <div className="sec-label">M5-01 — ETA deviation queue</div>
-                <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:8}}>Alerts fire when ETA slips &gt; 10 min. Priority scales with magnitude.</div>
-
-                {[
-                  {id:'T-2847',vid:'V-07',p:'P0',pt:'pt0',dev:'+22 min',origETA:'14:45',currETA:'15:07',route:'Mission District → SFO T2',cause:'AI Hesitation Events',root:'ai',pct:88,age:'6 min',claimed:false,rec:'AI hesitation ongoing — consider investigation'},
-                  {id:'T-2851',vid:'V-03',p:'P1',pt:'pt1',dev:'+17 min',origETA:'15:10',currETA:'15:27',route:'Financial District → Caltrain',cause:'Traffic Congestion',root:'traffic',pct:68,age:'3 min',claimed:true,rec:'Zone impact — no action needed, vehicle rerouting'},
-                  {id:'T-2863',vid:'V-26',p:'P2',pt:'pt2',dev:'+11 min',origETA:'15:30',currETA:'15:41',route:'Outer Sunset → Union Square',cause:'Zone Blockage Impact',root:'zone',pct:44,age:'8 min',claimed:false,rec:'Zone impact — no action needed, vehicle rerouting'},
-                ].map(t=>(
-                  <div key={t.id} style={{background:'var(--bg-elevated)',border:'1px solid var(--border)',borderRadius:'var(--r-lg)',padding:12,marginBottom:8,borderLeftWidth:3,borderLeftColor:t.pt==='pt0'?'var(--red)':t.pt==='pt1'?'var(--amber)':'var(--purple)'}}>
-                    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
-                      <span className={`priority-tag ${t.pt}`}>{t.p} {t.dev}</span>
-                      <span style={{fontSize:12,fontWeight:500,color:'var(--text-primary)',fontFamily:'var(--font-mono)'}}>{t.id} · {t.vid}</span>
-                      <span style={{marginLeft:'auto',fontSize:10,color:'var(--text-muted)',fontFamily:'var(--font-mono)'}}>{t.age}</span>
-                    </div>
-                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:6}}>
-                      <div style={{fontSize:10,color:'var(--text-muted)'}}>Original ETA: <span style={{color:'var(--text-primary)',fontFamily:'var(--font-mono)'}}>{t.origETA}</span></div>
-                      <div style={{fontSize:10,color:'var(--text-muted)'}}>Current ETA: <span style={{color:'var(--red)',fontFamily:'var(--font-mono)'}}>{t.currETA}</span></div>
-                    </div>
-                    <div style={{height:3,background:'var(--bg-card)',borderRadius:2,marginBottom:6}}><div style={{height:'100%',borderRadius:2,background:t.pt==='pt0'?'var(--red)':t.pt==='pt1'?'var(--amber)':'var(--purple)',width:`${t.pct}%`}}/></div>
-                    <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:6}}>{t.route}</div>
-                    <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
-                      <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'var(--bg-card)',color:'var(--text-muted)',border:'1px solid var(--border)'}}>{t.cause}</span>
-                      {t.claimed && <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'rgba(59,130,246,0.12)',color:'var(--blue)',border:'1px solid rgba(59,130,246,0.2)'}}>Claimed</span>}
-                      {!t.claimed && <button style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'var(--bg-elevated)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onClick={()=>toast(`T-${t.id} claimed — removed from unassigned queue`)}>Claim</button>}
-                    </div>
-
-                    <div style={{marginTop:10,background:'var(--bg-card)',borderRadius:8,padding:10}}>
-                      <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>M5-02 — Root cause investigation</div>
-                      <div style={{display:'flex',gap:6,marginBottom:6,flexWrap:'wrap'}}>
-                        {[{l:'Traffic Congestion',c:t.root==='traffic'},{l:'Zone Blockage Impact',c:t.root==='zone'},{l:'AI Hesitation Events',c:t.root==='ai'},{l:'Sensor Degradation',c:false},{l:'Unknown',c:false}].map(r=>(
-                          <span key={r.l} style={{fontSize:9,padding:'2px 7px',borderRadius:20,background:r.c?'rgba(59,130,246,0.15)':'var(--bg-elevated)',color:r.c?'var(--blue)':'var(--text-muted)',border:`1px solid ${r.c?'rgba(59,130,246,0.3)':'var(--border)'}`,fontWeight:r.c?600:400}}>{r.l}{r.c?' ✓':''}</span>
-                        ))}
-                      </div>
-                      {t.root==='ai' && (
-                        <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:6}}>
-                          <span style={{color:'var(--amber)'}}>● </span>Hesitation 1 — 14:39 — conf 58% &nbsp;
-                          <span style={{color:'var(--red)'}}>● </span>Hesitation 2 — 14:44 — conf 41% &nbsp;
-                          <span style={{color:'var(--red)'}}>● </span>Hesitation 3 — 14:51 — conf 38% (ongoing)
-                        </div>
-                      )}
-                      <div style={{fontSize:10,background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:6,padding:'6px 8px',color:'#93C5FD',marginBottom:8}}>
-                        <strong>Recommended action:</strong> {t.rec}
-                      </div>
-                      <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:4}}>Resolution classification (required to close):</div>
-                      <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:t.dev.includes('2')||t.dev.includes('1')?8:0}}>
-                        {['No action needed','Operator action taken','Escalated to engineering'].map(c=>(
-                          <span key={c} className={`cause-btn ${causeSel===t.id+c?'selected':''}`} onClick={()=>{setCauseSel(t.id+c);toast(`${t.id} classified: ${c}`)}}>{c}</span>
-                        ))}
-                      </div>
-                      {(t.pt==='pt0'||t.pt==='pt1') && (
-                        <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border)'}}>
-                          <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>M5-03 — Passenger notification (ETA &gt; 15 min)</div>
-                          <select className="form-select" style={{marginBottom:6,fontSize:11}} aria-label="Notification template">
-                            <option>— Select pre-approved template —</option>
-                            <option>Minor delay — we apologize for the inconvenience</option>
-                            <option>Significant delay — your driver is navigating a traffic event</option>
-                            <option>Major delay — you may choose to cancel at no charge</option>
-                          </select>
-                          <button className="btn btn-primary" style={{marginBottom:0,fontSize:11}} onClick={()=>toast(`Notification sent via Uber API for ${t.id} — delivery confirmed ✓`)}>
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                            Send via Uber — templates only, no free text
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                <div className="sec-label" style={{marginTop:12}}>Location deviations</div>
-                <div className="trip-card" onClick={()=>toast('Opening T-2839 location deviation investigation')}>
-                  <div className="trip-header"><span className="priority-tag pt2" style={{background:'var(--purple-dim)',color:'var(--purple)'}}>+143m</span><span className="trip-id">T-2839 · V-15</span><span className="alert-age">Completed</span></div>
-                  <div className="trip-route">Dropoff deviation — Potrero Hill · No stopping zone detected</div>
-                  <div className="cause-chip">Unclassified — needs review</div>
+                {/* Toggle bar */}
+                <div style={{display:'flex',background:'var(--bg-base)',border:'1px solid var(--border)',borderRadius:8,padding:3,marginBottom:14,gap:2}}>
+                  <button onClick={()=>setTripView('eta')} style={{flex:1,padding:'6px 8px',borderRadius:6,border:'none',cursor:'pointer',fontSize:11,fontWeight:500,fontFamily:'var(--font-sans)',background:tripView==='eta'?'var(--bg-elevated)':'transparent',color:tripView==='eta'?'var(--blue)':'var(--text-muted)',transition:'all .15s'}}>
+                    ETA Deviations <span style={{fontSize:10,padding:'1px 5px',borderRadius:3,background:'rgba(239,68,68,0.12)',color:'var(--red)',marginLeft:4}}>3</span>
+                  </button>
+                  <button onClick={()=>setTripView('location')} style={{flex:1,padding:'6px 8px',borderRadius:6,border:'none',cursor:'pointer',fontSize:11,fontWeight:500,fontFamily:'var(--font-sans)',background:tripView==='location'?'var(--bg-elevated)':'transparent',color:tripView==='location'?'var(--blue)':'var(--text-muted)',transition:'all .15s'}}>
+                    Location Deviations <span style={{fontSize:10,padding:'1px 5px',borderRadius:3,background:'rgba(167,139,250,0.12)',color:'var(--purple)',marginLeft:4}}>2</span>
+                  </button>
                 </div>
+
+                {/* ETA DEVIATIONS VIEW */}
+                {tripView==='eta' && (
+                  <>
+                    <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:8}}>Alerts fire when ETA slips &gt;10 min. Priority scales with magnitude.</div>
+                    {[
+                      {id:'T-2847',vid:'V-07',p:'P0',pt:'pt0',dev:'+22 min',origETA:'14:45',currETA:'15:07',route:'Mission District → SFO T2',cause:'AI Hesitation Events',root:'ai',pct:88,age:'6 min',claimed:false,rec:'AI hesitation ongoing — consider investigation'},
+                      {id:'T-2851',vid:'V-03',p:'P1',pt:'pt1',dev:'+17 min',origETA:'15:10',currETA:'15:27',route:'Financial District → Caltrain',cause:'Traffic Congestion',root:'traffic',pct:68,age:'3 min',claimed:true,rec:'Traffic congestion — monitor, no action needed'},
+                      {id:'T-2863',vid:'V-26',p:'P2',pt:'pt2',dev:'+11 min',origETA:'15:30',currETA:'15:41',route:'Outer Sunset → Union Square',cause:'Zone Blockage Impact',root:'zone',pct:44,age:'8 min',claimed:false,rec:'Zone impact — no action needed, vehicle rerouting'},
+                    ].map(t=>(
+                      <div key={t.id} style={{background:'var(--bg-elevated)',border:'1px solid var(--border)',borderRadius:'var(--r-lg)',padding:12,marginBottom:8,borderLeftWidth:3,borderLeftColor:t.pt==='pt0'?'var(--red)':t.pt==='pt1'?'var(--amber)':'var(--purple)'}}>
+                        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                          <span className={`priority-tag ${t.pt}`}>{t.p} {t.dev}</span>
+                          <span style={{fontSize:12,fontWeight:500,color:'var(--text-primary)',fontFamily:'var(--font-mono)'}}>{t.id} · {t.vid}</span>
+                          <span style={{marginLeft:'auto',fontSize:10,color:'var(--text-muted)',fontFamily:'var(--font-mono)'}}>{t.age}</span>
+                        </div>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:6}}>
+                          <div style={{fontSize:10,color:'var(--text-muted)'}}>Original: <span style={{color:'var(--text-primary)',fontFamily:'var(--font-mono)'}}>{t.origETA}</span></div>
+                          <div style={{fontSize:10,color:'var(--text-muted)'}}>Current: <span style={{color:'var(--red)',fontFamily:'var(--font-mono)'}}>{t.currETA}</span></div>
+                        </div>
+                        <div style={{height:3,background:'var(--bg-card)',borderRadius:2,marginBottom:6}}><div style={{height:'100%',borderRadius:2,background:t.pt==='pt0'?'var(--red)':t.pt==='pt1'?'var(--amber)':'var(--purple)',width:`${t.pct}%`}}/></div>
+                        <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:6}}>{t.route}</div>
+                        <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap',marginBottom:8}}>
+                          <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'var(--bg-card)',color:'var(--text-muted)',border:'1px solid var(--border)'}}>{t.cause}</span>
+                          {t.claimed
+                            ? <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'rgba(59,130,246,0.12)',color:'var(--blue)',border:'1px solid rgba(59,130,246,0.2)'}}>Claimed by you</span>
+                            : <button style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'var(--bg-elevated)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onClick={()=>toast(`${t.id} claimed — removed from unassigned queue`)}>Claim investigation</button>
+                          }
+                        </div>
+                        <div style={{background:'var(--bg-card)',borderRadius:8,padding:10}}>
+                          <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>M5-02 — Root cause</div>
+                          <div style={{display:'flex',gap:4,marginBottom:6,flexWrap:'wrap'}}>
+                            {['Traffic Congestion','Zone Blockage Impact','AI Hesitation Events','Sensor Degradation','Unknown'].map(r=>(
+                              <span key={r} style={{fontSize:9,padding:'2px 7px',borderRadius:20,background:r===t.cause?'rgba(59,130,246,0.15)':'var(--bg-elevated)',color:r===t.cause?'var(--blue)':'var(--text-muted)',border:`1px solid ${r===t.cause?'rgba(59,130,246,0.3)':'var(--border)'}`,fontWeight:r===t.cause?600:400}}>{r}{r===t.cause?' ✓':''}</span>
+                            ))}
+                          </div>
+                          {t.root==='ai' && <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:6}}><span style={{color:'var(--amber)'}}>●</span> 14:39 conf 58% &nbsp;<span style={{color:'var(--red)'}}>●</span> 14:44 conf 41% &nbsp;<span style={{color:'var(--red)'}}>●</span> 14:51 conf 38% (ongoing)</div>}
+                          <div style={{fontSize:10,background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:6,padding:'6px 8px',color:'#93C5FD',marginBottom:8}}><strong>Recommended:</strong> {t.rec}</div>
+                          <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:4}}>Resolution (required to close):</div>
+                          <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>
+                            {['No action needed','Action taken','Escalate to eng'].map(c=>(
+                              <span key={c} className={`cause-btn ${causeSel===t.id+c?'selected':''}`} onClick={()=>{setCauseSel(t.id+c);toast(`${t.id}: ${c}`)}}>{c}</span>
+                            ))}
+                          </div>
+                          {(t.pt==='pt0'||t.pt==='pt1') && (
+                            <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border)'}}>
+                              <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>M5-03 — Passenger notification</div>
+                              <select className="form-select" style={{marginBottom:6,fontSize:11}}>
+                                <option>— Select pre-approved template —</option>
+                                <option>Minor delay — we apologize for the inconvenience</option>
+                                <option>Significant delay — your driver is navigating a traffic event</option>
+                                <option>Major delay — you may choose to cancel at no charge</option>
+                              </select>
+                              <button className="btn btn-primary" style={{marginBottom:0,fontSize:11}} onClick={()=>toast(`Notification sent via Uber for ${t.id} — delivery confirmed ✓`)}>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                Send via Uber (templates only)
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+
+                {/* LOCATION DEVIATIONS VIEW */}
+                {tripView==='location' && (
+                  <>
+                    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:10}}>
+                      <div style={{fontSize:10,color:'var(--text-muted)'}}>Filter:</div>
+                      {['all','pickup','dropoff','unclassified'].map(f=>(
+                        <button key={f} onClick={()=>setLocFilter(f)} style={{fontSize:10,padding:'3px 8px',borderRadius:20,border:'1px solid var(--border)',background:locFilter===f?'var(--blue-dim)':'var(--bg-elevated)',color:locFilter===f?'var(--blue)':'var(--text-muted)',cursor:'pointer',fontFamily:'var(--font-sans)',textTransform:'capitalize'}}>{f}</button>
+                      ))}
+                    </div>
+                    <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:8}}>Alerts fire within 5 min of trip completion when deviation &gt;100m. Cannot be closed without classification.</div>
+
+                    {[
+                      {id:'T-2839',vid:'V-15',type:'dropoff',dist:'143m',dir:'northeast',zone:'Potrero Hill',status:'unclassified',age:'12 min',reqLoc:'18th St & Connecticut St',actLoc:'18th St & Missouri St',aiConf:84,aiReason:'No stopping zone detected at requested location',zoneCheck:'No active zone at time of trip',passenger:'Significant — passenger walked 143m'},
+                      {id:'T-2801',vid:'V-22',type:'pickup',dist:'118m',dir:'south',zone:'Inner Richmond',status:'classified',age:'1h 4m',reqLoc:'Clement St & 6th Ave',actLoc:'Clement St & 7th Ave',aiConf:79,aiReason:'Double-parked vehicle blocking requested pickup location',zoneCheck:'No active zone at time of trip',passenger:'Minor — passenger waited 2 min extra'},
+                    ].filter(d=>locFilter==='all'||d.type===locFilter||(locFilter==='unclassified'&&d.status==='unclassified')).map(d=>(
+                      <div key={d.id} style={{background:'var(--bg-elevated)',border:'1px solid var(--border)',borderRadius:'var(--r-lg)',padding:12,marginBottom:10,borderLeftWidth:3,borderLeftColor:'var(--purple)'}}>
+                        <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:8}}>
+                          <span style={{fontSize:9,fontWeight:700,padding:'2px 6px',borderRadius:3,background:'var(--purple-dim)',color:'var(--purple)',fontFamily:'var(--font-mono)',textTransform:'uppercase'}}>{d.type} dev</span>
+                          <span style={{fontSize:12,fontWeight:500,color:'var(--text-primary)',fontFamily:'var(--font-mono)'}}>{d.id} · {d.vid}</span>
+                          <span style={{marginLeft:'auto',fontSize:10,color:'var(--text-muted)',fontFamily:'var(--font-mono)'}}>{d.age}</span>
+                        </div>
+
+                        <div style={{background:'#070F1F',borderRadius:8,height:80,position:'relative',overflow:'hidden',marginBottom:10,border:'1px solid rgba(255,255,255,0.06)'}}>
+                          <div style={{position:'absolute',inset:0,backgroundImage:'linear-gradient(rgba(255,255,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.03) 1px,transparent 1px)',backgroundSize:'20px 20px'}}/>
+                          <div style={{position:'absolute',top:'50%',left:0,right:0,height:4,background:'rgba(255,255,255,0.06)',transform:'translateY(-50%)'}}/>
+                          <div style={{position:'absolute',top:'50%',left:'25%',width:10,height:10,borderRadius:'50%',background:'#22C55E',border:'2px solid #fff',transform:'translate(-50%,-50%)',zIndex:2}} title="Requested location"/>
+                          <div style={{position:'absolute',top:'50%',left:'65%',width:10,height:10,borderRadius:'50%',background:'#EF4444',border:'2px solid #fff',transform:'translate(-50%,-50%)',zIndex:2}} title="Actual stop"/>
+                          <div style={{position:'absolute',top:'50%',left:'25%',width:'40%',height:0,borderTop:'2px dashed rgba(239,68,68,0.5)',transform:'translateY(-1px)'}}/>
+                          <div style={{position:'absolute',bottom:4,left:6,fontSize:8,color:'rgba(34,197,94,0.8)',fontFamily:'monospace'}}>● Requested</div>
+                          <div style={{position:'absolute',bottom:4,right:6,fontSize:8,color:'rgba(239,68,68,0.8)',fontFamily:'monospace'}}>● Actual (+{d.dist})</div>
+                        </div>
+
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:8}}>
+                          <div style={{fontSize:10,color:'var(--text-muted)'}}>Requested: <span style={{color:'var(--green)',display:'block',fontFamily:'var(--font-mono)',fontSize:9}}>{d.reqLoc}</span></div>
+                          <div style={{fontSize:10,color:'var(--text-muted)'}}>Actual stop: <span style={{color:'var(--red)',display:'block',fontFamily:'var(--font-mono)',fontSize:9}}>{d.actLoc}</span></div>
+                          <div style={{fontSize:10,color:'var(--text-muted)'}}>Distance: <span style={{color:'var(--text-primary)',fontWeight:500}}>{d.dist} {d.dir}</span></div>
+                          <div style={{fontSize:10,color:'var(--text-muted)'}}>Zone check: <span style={{color:'var(--green)',fontSize:9}}>{d.zoneCheck}</span></div>
+                        </div>
+
+                        <div style={{background:'var(--bg-card)',borderRadius:8,padding:10,marginBottom:8}}>
+                          <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>M5-05 — AI decision at approach</div>
+                          <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:4}}>Confidence at approach: <span style={{color:d.aiConf>80?'var(--green)':'var(--amber)',fontFamily:'var(--font-mono)',fontWeight:500}}>{d.aiConf}%</span></div>
+                          <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:8}}>AI reason: <span style={{color:'var(--text-secondary)'}}>{d.aiReason}</span></div>
+                          <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:6}}>Classify cause (required):</div>
+                          <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:8}}>
+                            {['Zone Blockage','Road Obstruction','AI Routing Decision','No Stopping Zone','Other'].map(c=>(
+                              <span key={c} className={`cause-btn ${locCause===d.id+c?'selected':''}`} onClick={()=>{setLocCause(d.id+c);toast(`${d.id} classified: ${c}`)}}>{c}</span>
+                            ))}
+                          </div>
+                          <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:4}}>Passenger impact:</div>
+                          <div style={{fontSize:10,color:'var(--text-secondary)',marginBottom:10,fontStyle:'italic'}}>{d.passenger}</div>
+
+                          <div style={{paddingTop:8,borderTop:'1px solid var(--border)'}}>
+                            <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>M5-06 — Engineering escalation</div>
+                            {escalated[d.id] ? (
+                              <div style={{fontSize:10,background:'rgba(34,197,94,0.08)',border:'1px solid rgba(34,197,94,0.2)',borderRadius:6,padding:'6px 8px',color:'var(--green)'}}>
+                                ✓ Ticket created — {escalated[d.id]} · Track in Supervisor dashboard
+                              </div>
+                            ) : (
+                              <>
+                                <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:6,marginBottom:6}}>
+                                  <select className="form-select" style={{fontSize:10}} aria-label="Severity">
+                                    <option>Severity — None</option>
+                                    <option>Severity — Minor</option>
+                                    <option>Severity — Significant</option>
+                                  </select>
+                                  <input className="form-input" style={{fontSize:10}} placeholder="Notes (optional)"/>
+                                </div>
+                                <button className="btn btn-warning" style={{marginBottom:0,fontSize:11}} onClick={()=>{
+                                  if(!locCause||!locCause.startsWith(d.id)){toast('Classify cause first before escalating');return;}
+                                  const tid='TKT-'+Math.floor(4800+Math.random()*200)
+                                  setEscalated(prev=>({...prev,[d.id]:tid}))
+                                  toast(`Engineering ticket ${tid} created — full deviation data attached`)
+                                }}>
+                                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+                                  Flag for engineering (requires classification)
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
               {showModal && (
                 <div className="modal-overlay">
