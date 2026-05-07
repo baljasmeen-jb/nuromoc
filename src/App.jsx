@@ -42,6 +42,115 @@ function Toast({ msg }) {
   return <div className={`toast ${msg ? 'show' : ''}`}>{msg}</div>
 }
 
+const OPERATORS = {
+  'Nathaniel': {id:'MOC-04',avatar:'NB',shiftStart:'08:00',shiftDuration:'3h 12m',avgResponse:38,responseTarget:60,responseTrend:-37,alertsHandled:21,alertsOK:12,alertsEsc:2,zonesCreated:2,zoneTypes:'Concert + Flooding',tripsAssisted:15,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:1,incidentNote:'1x P2 · NURO-ONYX',etaInvestigated:6,etaBreakdown:[{label:'Traffic',count:3,color:'#22C55E'},{label:'Zone',count:2,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:2.1,fpAlerts:48,recallsIssued:1},
+  'Maggie': {id:'MOC-02',avatar:'MG',shiftStart:'08:00',shiftDuration:'5h 44m',avgResponse:44,responseTarget:60,responseTrend:-12,alertsHandled:34,alertsOK:29,alertsEsc:3,zonesCreated:1,zoneTypes:'Marathon',tripsAssisted:22,tripsTrend:'up',shiftUptime:98,uptimeNote:'Minor sensor lag',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:9,etaBreakdown:[{label:'Traffic',count:5,color:'#22C55E'},{label:'Zone',count:3,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:3.2,fpAlerts:62,recallsIssued:0},
+  'Brandon': {id:'MOC-07',avatar:'BR',shiftStart:'09:00',shiftDuration:'1h 20m',avgResponse:29,responseTarget:60,responseTrend:-52,alertsHandled:8,alertsOK:8,alertsEsc:0,zonesCreated:0,zoneTypes:'None yet',tripsAssisted:6,tripsTrend:'neutral',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:2,etaBreakdown:[{label:'Traffic',count:2,color:'#22C55E'},{label:'Zone',count:0,color:'#F59E0B'},{label:'AV',count:0,color:'#3B82F6'}],falsePositiveRate:0,fpAlerts:8,recallsIssued:0},
+  'Jasmeen': {id:'MOC-09',avatar:'JA',shiftStart:'09:00',shiftDuration:'2h 05m',avgResponse:31,responseTarget:60,responseTrend:-48,alertsHandled:12,alertsOK:11,alertsEsc:1,zonesCreated:1,zoneTypes:'Road closure',tripsAssisted:9,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:3,etaBreakdown:[{label:'Traffic',count:2,color:'#22C55E'},{label:'Zone',count:1,color:'#F59E0B'},{label:'AV',count:0,color:'#3B82F6'}],falsePositiveRate:1.2,fpAlerts:12,recallsIssued:0}
+}
+
+function OperatorCard({ name, onClose }) {
+  const d = OPERATORS[name]
+  if (!d) return null
+  const s = {
+    wrap:{position:'absolute',top:0,left:0,right:0,bottom:0,background:'rgba(7,12,24,0.75)',zIndex:60,display:'flex',alignItems:'flex-start',justifyContent:'flex-end',padding:16},
+    card:{background:'#0D1526',border:'1px solid rgba(255,255,255,0.1)',borderRadius:16,width:280,padding:16,fontFamily:'var(--font-sans)'},
+    header:{display:'flex',alignItems:'center',gap:10,marginBottom:14,paddingBottom:12,borderBottom:'1px solid rgba(255,255,255,0.08)'},
+    avatar:{width:38,height:38,borderRadius:'50%',background:'#1A2A42',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:600,color:'var(--text-primary)',flexShrink:0},
+    name:{fontSize:14,fontWeight:600,color:'#F0F4FF'},
+    sub:{fontSize:11,color:'#8A9BBE',marginTop:2},
+    grid:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8},
+    tile:{background:'#132035',borderRadius:10,padding:'10px 12px'},
+    tlabel:{fontSize:10,color:'#8A9BBE',marginBottom:3},
+    tval:{fontSize:22,fontWeight:700,color:'#F0F4FF',fontFamily:'var(--font-mono)',lineHeight:1},
+    tsub:{fontSize:10,color:'#8A9BBE',marginTop:3},
+    bar:{height:3,background:'rgba(255,255,255,0.08)',borderRadius:2,marginTop:5},
+    close:{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'#4A5878',fontSize:18},
+    trendUp:{fontSize:11,color:'#22C55E',fontWeight:500},
+    trendDown:{fontSize:11,color:'#EF4444',fontWeight:500},
+    trendGood:{fontSize:11,color:'#22C55E',fontWeight:500},
+    tag:{display:'inline-block',fontSize:9,padding:'2px 6px',borderRadius:3,fontWeight:600,fontFamily:'var(--font-mono)'},
+    etaRow:{display:'flex',gap:4,marginTop:6,flexWrap:'wrap'},
+    etaChip:{fontSize:10,padding:'2px 7px',borderRadius:20,display:'flex',alignItems:'center',gap:3},
+  }
+  const trendGood = d.responseTrend < 0
+  return (
+    <div style={s.wrap} onClick={onClose}>
+      <div style={s.card} onClick={e=>e.stopPropagation()}>
+        <div style={s.header}>
+          <div style={s.avatar}>{d.avatar}</div>
+          <div>
+            <div style={s.name}>{name} — My Shift</div>
+            <div style={s.sub}>Shift started {d.shiftStart} · {d.shiftDuration}</div>
+          </div>
+          <button style={s.close} onClick={onClose}>×</button>
+        </div>
+        <div style={s.grid}>
+          <div style={s.tile}>
+            <div style={s.tlabel}>AVG RESPONSE</div>
+            <div style={s.tval}>{d.avgResponse}<span style={{fontSize:13,fontWeight:400}}>s</span></div>
+            <div style={{...s.bar}}><div style={{height:'100%',borderRadius:2,background:'#22C55E',width:`${Math.min(100,(d.avgResponse/d.responseTarget)*100)}%`}}/></div>
+            <div style={s.tsub}>Target &lt;{d.responseTarget}s <span style={trendGood?s.trendGood:s.trendDown}>↓ {Math.abs(d.responseTrend)}%</span></div>
+          </div>
+          <div style={s.tile}>
+            <div style={s.tlabel}>TRIPS ASSISTED</div>
+            <div style={s.tval}>{d.tripsAssisted}</div>
+            <div style={s.tsub}>Shift total <span style={s.trendGood}>{d.tripsTrend==='up'?'↑ vs yesterday':''}</span></div>
+          </div>
+          <div style={s.tile}>
+            <div style={s.tlabel}>ALERTS HANDLED</div>
+            <div style={s.tval}>{d.alertsHandled}</div>
+            <div style={{display:'flex',gap:4,marginTop:5}}>
+              <span style={{...s.tag,background:'rgba(34,197,94,0.15)',color:'#22C55E'}}>{d.alertsOK} OK</span>
+              {d.alertsEsc > 0 && <span style={{...s.tag,background:'rgba(239,68,68,0.15)',color:'#EF4444'}}>{d.alertsEsc} Esc</span>}
+            </div>
+          </div>
+          <div style={s.tile}>
+            <div style={s.tlabel}>SHIFT UPTIME</div>
+            <div style={s.tval}>{d.shiftUptime}<span style={{fontSize:13,fontWeight:400}}>%</span></div>
+            <div style={s.tsub} dangerouslySetInnerHTML={{__html:d.uptimeNote}}/>
+          </div>
+          <div style={s.tile}>
+            <div style={s.tlabel}>ZONES CREATED</div>
+            <div style={s.tval}>{d.zonesCreated}</div>
+            <div style={s.tsub}>{d.zoneTypes}</div>
+          </div>
+          <div style={s.tile}>
+            <div style={s.tlabel}>INCIDENTS FILED</div>
+            <div style={s.tval}>{d.incidentsFiled}</div>
+            <div style={s.tsub}>{d.incidentNote}</div>
+          </div>
+        </div>
+        <div style={{...s.tile,marginTop:8}}>
+          <div style={s.tlabel}>ETA DEVIATIONS INVESTIGATED</div>
+          <div style={s.tval}>{d.etaInvestigated}</div>
+          <div style={s.etaRow}>
+            {d.etaBreakdown.filter(e=>e.count>0).map(e=>(
+              <div key={e.label} style={{...s.etaChip,background:e.color+'22',color:e.color}}>
+                <span style={{width:5,height:5,borderRadius:'50%',background:e.color,display:'inline-block'}}/>
+                {e.label} ({e.count})
+              </div>
+            ))}
+          </div>
+        </div>
+        <div style={{...s.grid,marginTop:8}}>
+          <div style={s.tile}>
+            <div style={s.tlabel}>FALSE POSITIVE RATE</div>
+            <div style={s.tval}>{d.falsePositiveRate}<span style={{fontSize:13,fontWeight:400}}>%</span></div>
+            <div style={s.tsub}>Target &lt;5% · {d.fpAlerts}/48 alerts</div>
+          </div>
+          <div style={s.tile}>
+            <div style={s.tlabel}>RECALLS ISSUED</div>
+            <div style={s.tval}>{d.recallsIssued}</div>
+            <div style={s.tsub}>{d.recallsIssued > 0 ? 'NURO-ONYX' : 'None'}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+
 export default function App() {
   const mapContainer = useRef(null)
   const map = useRef(null)
@@ -56,8 +165,8 @@ export default function App() {
   const [zoneNameInput, setZoneNameInput] = useState('')
   const [zoneType, setZoneType] = useState('Planned event')
   const [zoneExpiry, setZoneExpiry] = useState('In 2 hours')
-  const [activePanel, setActivePanel] = useState(null)
-  const [activeNav, setActiveNav] = useState('fleet')
+  const [activePanel, setActivePanel] = useState('myshift')
+  const [activeNav, setActiveNav] = useState('myshift')
   const [tab, setTab] = useState('alerts')
   const [toastMsg, setToastMsg] = useState('')
   const [clock, setClock] = useState('')
@@ -66,6 +175,7 @@ export default function App() {
   const [searchDone, setSearchDone] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const [causeSel, setCauseSel] = useState(null)
+  const [selectedOperator, setSelectedOperator] = useState(null)
   const toastTimer = useRef(null)
 
   useEffect(() => {
@@ -178,13 +288,20 @@ export default function App() {
         <div className="topbar-right">
           <div className="live-pill"><div className="live-dot"/>LIVE</div>
           <div className="clock">{clock}</div>
-          <div className="user-info">{roleUsers[role]}</div>
+          <div className="user-info" style={{cursor:'pointer',padding:'3px 8px',borderRadius:6,border:'1px solid transparent',transition:'all .15s'}}
+            onMouseEnter={e=>{e.currentTarget.style.background='rgba(255,255,255,0.06)';e.currentTarget.style.borderColor='rgba(255,255,255,0.08)'}}
+            onMouseLeave={e=>{e.currentTarget.style.background='transparent';e.currentTarget.style.borderColor='transparent'}}
+            onClick={()=>setSelectedOperator(roleUsers[role].split(' /')[0])}
+            title="View my shift performance">
+            {roleUsers[role]} <span style={{fontSize:9,color:'var(--text-muted)',marginLeft:2}}>▸</span>
+          </div>
         </div>
       </div>
 
       {role !== 'sv' && (
         <div className="sidenav">
           {[
+            {key:'myshift',d:<><circle cx="12" cy="8" r="4"/><path d="M4 20v-1a8 8 0 0116 0v1"/></>,b:false},
             {key:'fleet',d:<><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></>,b:false},
             {key:'zone',d:<><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/><circle cx="12" cy="9" r="2.5"/><line x1="4" y1="20" x2="20" y2="4"/></>,b:true},
             {key:'emergency',d:<><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,b:false},
@@ -216,7 +333,7 @@ export default function App() {
                 {init:'JA',name:'Jasmeen',id:'MOC-09',detail:'2h 05m · Available',cls:'available',avcls:'av-green',load:12,alerts:1,acls:'ac-green'},
                 {init:'LW',name:'L. Wang',id:'Senior MOC',detail:'4h 30m · Available',cls:'available',avcls:'av-green',load:8,alerts:0,acls:'ac-green'},
               ].map(m=>(
-                <div key={m.init} className={`moc-row ${m.cls}`} onClick={()=>toast(`Opening ${m.name}'s queue`)}>
+                <div key={m.init} className={`moc-row ${m.cls}`} onClick={()=>setSelectedOperator(m.name)}>
                   <div className={`moc-avatar ${m.avcls}`}>{m.init}</div>
                   <div><div className="moc-name">{m.name} <span style={{fontSize:10,color:'var(--text-muted)',fontWeight:400}}>{m.id}</span></div>
                   <div className="moc-detail">{m.detail}</div>
@@ -316,6 +433,93 @@ export default function App() {
                   </div>
                 </div>
               )}
+
+
+              <div className={`panel ${activePanel==='myshift'?'open':''}`} style={{background:'var(--bg-base)',overflowY:'auto'}}>
+                <div style={{maxWidth:600,margin:'0 auto',padding:'24px 20px'}}>
+                  {(() => {
+                    const nameMap = {op:'Nathaniel',sr:'L.Wang',sv:'Emily'}
+                    const name = nameMap[role]
+                    const d = OPERATORS[name]
+                    if (!d) return <div style={{color:'var(--text-muted)',textAlign:'center',padding:40}}>No shift data available</div>
+                    return (
+                      <>
+                        <div style={{display:'flex',alignItems:'center',gap:12,marginBottom:24,paddingBottom:16,borderBottom:'1px solid var(--border)'}}>
+                          <div style={{width:44,height:44,borderRadius:'50%',background:'#1A2A42',border:'2px solid var(--blue)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:15,fontWeight:600,color:'var(--text-primary)'}}>{d.avatar}</div>
+                          <div>
+                            <div style={{fontSize:16,fontWeight:600,color:'var(--text-primary)'}}>{name} — My Shift</div>
+                            <div style={{fontSize:12,color:'var(--text-secondary)',marginTop:2}}>Shift started {d.shiftStart} · {d.shiftDuration} elapsed · {d.id}</div>
+                          </div>
+                          <button className="btn btn-neutral" style={{marginLeft:'auto',width:'auto',padding:'6px 14px',marginBottom:0}} onClick={()=>openMod('fleet')}>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+                            Fleet view
+                          </button>
+                        </div>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10,marginBottom:10}}>
+                          <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Avg Response</div>
+                            <div style={{fontSize:32,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)',lineHeight:1}}>{d.avgResponse}<span style={{fontSize:16,fontWeight:400}}>s</span></div>
+                            <div style={{height:3,background:'rgba(255,255,255,0.06)',borderRadius:2,margin:'8px 0 4px'}}><div style={{height:'100%',borderRadius:2,background:'#22C55E',width:`${Math.min(100,(d.avgResponse/d.responseTarget)*100)}%`}}/></div>
+                            <div style={{fontSize:11,color:'var(--text-muted)'}}> Target &lt;{d.responseTarget}s <span style={{color:'#22C55E',fontWeight:500}}>↓ {Math.abs(d.responseTrend)}%</span></div>
+                          </div>
+                          <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Trips Assisted</div>
+                            <div style={{fontSize:32,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)',lineHeight:1}}>{d.tripsAssisted}</div>
+                            <div style={{fontSize:11,color:'var(--text-muted)',marginTop:8}}>Shift total <span style={{color:'#22C55E',fontWeight:500}}>{d.tripsTrend==='up'?'↑ vs yesterday':''}</span></div>
+                          </div>
+                          <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Alerts Handled</div>
+                            <div style={{fontSize:32,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)',lineHeight:1}}>{d.alertsHandled}</div>
+                            <div style={{display:'flex',gap:6,marginTop:8}}>
+                              <span style={{fontSize:10,padding:'2px 8px',borderRadius:4,background:'rgba(34,197,94,0.12)',color:'#22C55E',fontWeight:600}}>{d.alertsOK} OK</span>
+                              {d.alertsEsc > 0 && <span style={{fontSize:10,padding:'2px 8px',borderRadius:4,background:'rgba(239,68,68,0.12)',color:'#EF4444',fontWeight:600}}>{d.alertsEsc} Esc</span>}
+                            </div>
+                          </div>
+                          <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Shift Uptime</div>
+                            <div style={{fontSize:32,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)',lineHeight:1}}>{d.shiftUptime}<span style={{fontSize:16,fontWeight:400}}>%</span></div>
+                            <div style={{fontSize:11,color:'var(--text-muted)',marginTop:8}}>{d.uptimeNote}</div>
+                          </div>
+                          <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Zones Created</div>
+                            <div style={{fontSize:32,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)',lineHeight:1}}>{d.zonesCreated}</div>
+                            <div style={{fontSize:11,color:'var(--text-muted)',marginTop:8}}>{d.zoneTypes}</div>
+                          </div>
+                          <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Incidents Filed</div>
+                            <div style={{fontSize:32,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)',lineHeight:1}}>{d.incidentsFiled}</div>
+                            <div style={{fontSize:11,color:'var(--text-muted)',marginTop:8}}>{d.incidentNote}</div>
+                          </div>
+                        </div>
+                        <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)',marginBottom:10}}>
+                          <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:8}}>ETA Deviations Investigated</div>
+                          <div style={{fontSize:32,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)',lineHeight:1,marginBottom:10}}>{d.etaInvestigated}</div>
+                          <div style={{display:'flex',gap:6,flexWrap:'wrap'}}>
+                            {d.etaBreakdown.filter(e=>e.count>0).map(e=>(
+                              <div key={e.label} style={{display:'flex',alignItems:'center',gap:5,fontSize:11,padding:'3px 10px',borderRadius:20,background:e.color+'18',color:e.color}}>
+                                <span style={{width:6,height:6,borderRadius:'50%',background:e.color,display:'inline-block'}}/>
+                                {e.label} ({e.count})
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:10}}>
+                          <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>False Positive Rate</div>
+                            <div style={{fontSize:32,fontWeight:700,color:d.falsePositiveRate>5?'#EF4444':'#22C55E',fontFamily:'var(--font-mono)',lineHeight:1}}>{d.falsePositiveRate}<span style={{fontSize:16,fontWeight:400}}>%</span></div>
+                            <div style={{fontSize:11,color:'var(--text-muted)',marginTop:8}}>Target &lt;5% · {d.fpAlerts}/48 alerts</div>
+                          </div>
+                          <div style={{background:'#0D1526',borderRadius:12,padding:'14px 16px',border:'1px solid rgba(255,255,255,0.06)'}}>
+                            <div style={{fontSize:10,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:6}}>Recalls Issued</div>
+                            <div style={{fontSize:32,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)',lineHeight:1}}>{d.recallsIssued}</div>
+                            <div style={{fontSize:11,color:'var(--text-muted)',marginTop:8}}>{d.recallsIssued>0?'NURO-ONYX':'None this shift'}</div>
+                          </div>
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+              </div>
 
               <div className={`panel ${activePanel==='zone'?'open':''}`}>
                 <div className="panel-header">
@@ -516,6 +720,7 @@ export default function App() {
           </>
         )}
       </div>
+      {selectedOperator && <OperatorCard name={selectedOperator} onClose={()=>setSelectedOperator(null)}/>}
       <Toast msg={toastMsg}/>
     </div>
   )
