@@ -42,6 +42,221 @@ function Toast({ msg }) {
   return <div className={`toast ${msg ? 'show' : ''}`}>{msg}</div>
 }
 
+function ETASummary() {
+  const canvasRef = useRef(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    const ctx = canvas.getContext('2d')
+    const W = canvas.width, H = canvas.height
+
+    // Data points — delay trend today
+    const data = [1.2,1.8,2.1,1.6,2.4,3.1,2.8,3.8,4.2,3.6,4.8,3.9,3.2,2.8,3.5,4.1,5.2,4.8,3.8]
+    const times = ['7AM','8AM','9AM','10AM','11AM','12PM','1PM','2PM','3PM','4PM','5PM','6PM','7PM','8PM','9PM','10PM','11PM','12AM','1AM']
+    const pad = {l:32,r:10,t:10,b:24}
+    const gW = W-pad.l-pad.r, gH = H-pad.t-pad.b
+    const maxV = 6, minV = 0
+
+    ctx.clearRect(0,0,W,H)
+
+    // Target line at 2.0
+    const targetY = pad.t + gH - ((2.0-minV)/(maxV-minV))*gH
+    ctx.beginPath()
+    ctx.setLineDash([4,4])
+    ctx.strokeStyle = 'rgba(34,197,94,0.4)'
+    ctx.lineWidth = 1
+    ctx.moveTo(pad.l, targetY)
+    ctx.lineTo(W-pad.r, targetY)
+    ctx.stroke()
+    ctx.setLineDash([])
+    ctx.fillStyle = 'rgba(34,197,94,0.5)'
+    ctx.font = '8px monospace'
+    ctx.fillText('Target 2.0', pad.l+2, targetY-3)
+
+    // Grid lines
+    [2,4,6].forEach(v => {
+      const y = pad.t + gH - ((v-minV)/(maxV-minV))*gH
+      ctx.beginPath()
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)'
+      ctx.lineWidth = 1
+      ctx.moveTo(pad.l, y)
+      ctx.lineTo(W-pad.r, y)
+      ctx.stroke()
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      ctx.font = '8px monospace'
+      ctx.fillText(v, 2, y+3)
+    })
+
+    // Fill area under curve
+    const pts = data.map((v,i) => ({
+      x: pad.l + (i/(data.length-1))*gW,
+      y: pad.t + gH - ((v-minV)/(maxV-minV))*gH
+    }))
+    ctx.beginPath()
+    ctx.moveTo(pts[0].x, pad.t+gH)
+    pts.forEach(p => ctx.lineTo(p.x, p.y))
+    ctx.lineTo(pts[pts.length-1].x, pad.t+gH)
+    ctx.closePath()
+    ctx.fillStyle = 'rgba(245,158,11,0.12)'
+    ctx.fill()
+
+    // Line
+    ctx.beginPath()
+    ctx.moveTo(pts[0].x, pts[0].y)
+    pts.forEach(p => ctx.lineTo(p.x, p.y))
+    ctx.strokeStyle = '#F59E0B'
+    ctx.lineWidth = 2
+    ctx.lineJoin = 'round'
+    ctx.stroke()
+
+    // Current point highlight
+    const cur = pts[pts.length-4]
+    ctx.beginPath()
+    ctx.arc(cur.x, cur.y, 4, 0, Math.PI*2)
+    ctx.fillStyle = '#F59E0B'
+    ctx.fill()
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth = 1.5
+    ctx.stroke()
+
+    // X axis labels — sparse
+    ;[0,3,6,9,12,15,18].forEach(i => {
+      const x = pad.l + (i/(data.length-1))*gW
+      ctx.fillStyle = 'rgba(255,255,255,0.3)'
+      ctx.font = '7px monospace'
+      ctx.textAlign = 'center'
+      ctx.fillText(times[i], x, H-4)
+    })
+  }, [])
+
+  // Heatmap data — SF zones grid
+  const heatmap = [
+    [1,1,2,1,1,2,1],[1,2,2,1,2,1,1],[1,1,3,2,3,2,1],
+    [2,2,4,5,4,3,2],[1,3,4,5,3,2,1],[1,2,3,4,3,2,1],
+    [1,1,2,3,2,1,1],[1,1,1,2,1,1,1]
+  ]
+  const zones = ['Marina','Pacific Hts','Western Add','Civic Ctr','SoMa','Mission','Bernal Hts','Excelsior']
+  const heatColor = v => v<=1?'#166534':v<=2?'#22C55E':v<=3?'#F59E0B':v<=4?'#EA580C':'#EF4444'
+
+  const corridors = [
+    {name:'Market St Corridor',delay:'6.2 min',trips:128,trend:'up',color:'#EF4444'},
+    {name:'Van Ness Ave',delay:'4.8 min',trips:94,trend:'up',color:'#F59E0B'},
+    {name:'Mission District',delay:'4.1 min',trips:76,trend:'neutral',color:'#F59E0B'},
+    {name:'SoMa / 4th St',delay:'3.9 min',trips:112,trend:'down',color:'#22C55E'},
+    {name:'Financial District',delay:'3.5 min',trips:156,trend:'neutral',color:'#22C55E'},
+  ]
+
+  const rootCauses = [
+    {label:'Traffic Congestion',pct:34,color:'#EF4444'},
+    {label:'Construction Zones',pct:22,color:'#F59E0B'},
+    {label:'Weather Conditions',pct:15,color:'#3B82F6'},
+    {label:'Unsafe Curb Access',pct:12,color:'#EA580C'},
+    {label:'Connectivity Issues',pct:8,color:'#A78BFA'},
+    {label:'Emergency Reroutes',pct:6,color:'#EC4899'},
+    {label:'AI Hesitation',pct:3,color:'#6B7280'},
+  ]
+
+  return (
+    <div style={{background:'var(--bg-elevated)',border:'1px solid var(--border)',borderRadius:'var(--r-lg)',padding:14,marginBottom:12}}>
+      {/* Top metrics */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,marginBottom:14}}>
+        <div style={{background:'var(--bg-card)',borderRadius:8,padding:'10px 12px'}}>
+          <div style={{fontSize:9,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:4}}>ETA Reliability</div>
+          <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+            <span style={{fontSize:26,fontWeight:700,color:'#22C55E',fontFamily:'var(--font-mono)'}}>87.3%</span>
+            <span style={{fontSize:11,color:'#EF4444',fontWeight:500}}>↓ 4.2%</span>
+          </div>
+          <div style={{fontSize:10,color:'var(--text-muted)',marginTop:2}}>vs. 91.5% baseline</div>
+        </div>
+        <div style={{background:'var(--bg-card)',borderRadius:8,padding:'10px 12px'}}>
+          <div style={{fontSize:9,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:4}}>Avg Delay</div>
+          <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+            <span style={{fontSize:26,fontWeight:700,color:'#F59E0B',fontFamily:'var(--font-mono)'}}>3.8</span>
+            <span style={{fontSize:13,color:'var(--text-muted)'}}>min</span>
+          </div>
+          <div style={{fontSize:10,color:'var(--text-muted)',marginTop:2}}>Target: &lt;2.0 min</div>
+        </div>
+        <div style={{background:'var(--bg-card)',borderRadius:8,padding:'10px 12px'}}>
+          <div style={{fontSize:9,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:4}}>Trips Affected</div>
+          <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+            <span style={{fontSize:26,fontWeight:700,color:'var(--text-primary)',fontFamily:'var(--font-mono)'}}>342</span>
+            <span style={{fontSize:11,color:'var(--text-muted)'}}>/1,247</span>
+          </div>
+          <div style={{fontSize:10,color:'var(--text-muted)',marginTop:2}}>27.4% of active trips</div>
+        </div>
+        <div style={{background:'var(--bg-card)',borderRadius:8,padding:'10px 12px'}}>
+          <div style={{fontSize:9,color:'var(--text-muted)',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:4}}>Corridors Degraded</div>
+          <div style={{display:'flex',alignItems:'baseline',gap:6}}>
+            <span style={{fontSize:26,fontWeight:700,color:'#EF4444',fontFamily:'var(--font-mono)'}}>5</span>
+            <span style={{fontSize:11,color:'var(--text-muted)'}}>/12</span>
+          </div>
+          <div style={{fontSize:10,color:'var(--text-muted)',marginTop:2}}>Above threshold</div>
+        </div>
+      </div>
+
+      {/* Delay trend chart */}
+      <div style={{marginBottom:12}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+          <span style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em'}}>Delay trend (today)</span>
+          <span style={{fontSize:9,color:'var(--text-muted)'}}>Avg delay in minutes</span>
+        </div>
+        <canvas ref={canvasRef} width={260} height={90} style={{width:'100%',height:90}}/>
+      </div>
+
+      {/* Heatmap */}
+      <div style={{marginBottom:12}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+          <span style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em'}}>ETA degradation — SF zones</span>
+        </div>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(7,1fr)',gap:2,marginBottom:4}}>
+          {heatmap.flat().map((v,i)=>(
+            <div key={i} style={{height:14,borderRadius:2,background:heatColor(v),cursor:'pointer',transition:'opacity .15s'}}
+              title={`Zone ${i}: delay level ${v}`}
+              onMouseEnter={e=>e.currentTarget.style.opacity='0.7'}
+              onMouseLeave={e=>e.currentTarget.style.opacity='1'}
+            />
+          ))}
+        </div>
+        <div style={{display:'flex',alignItems:'center',gap:10,fontSize:9,color:'var(--text-muted)'}}>
+          <span style={{display:'flex',alignItems:'center',gap:3}}><span style={{width:8,height:8,borderRadius:2,background:'#22C55E',display:'inline-block'}}/> Low</span>
+          <span style={{display:'flex',alignItems:'center',gap:3}}><span style={{width:8,height:8,borderRadius:2,background:'#F59E0B',display:'inline-block'}}/> Med</span>
+          <span style={{display:'flex',alignItems:'center',gap:3}}><span style={{width:8,height:8,borderRadius:2,background:'#EF4444',display:'inline-block'}}/> High</span>
+          <span style={{marginLeft:'auto'}}>Click zone for details</span>
+        </div>
+      </div>
+
+      {/* Root cause breakdown */}
+      <div style={{marginBottom:12}}>
+        <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8}}>Root cause analysis</div>
+        {rootCauses.map(r=>(
+          <div key={r.label} style={{display:'flex',alignItems:'center',gap:8,marginBottom:5}}>
+            <span style={{fontSize:10,color:'var(--text-secondary)',width:110,flexShrink:0}}>{r.label}</span>
+            <div style={{flex:1,height:4,background:'var(--bg-card)',borderRadius:2}}>
+              <div style={{height:'100%',borderRadius:2,background:r.color,width:`${r.pct*2.5}%`,transition:'width .3s'}}/>
+            </div>
+            <span style={{fontSize:10,color:'var(--text-muted)',width:28,textAlign:'right',fontFamily:'var(--font-mono)'}}>{r.pct}%</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Repeated delay corridors */}
+      <div>
+        <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:8}}>Repeated delay corridors</div>
+        {corridors.map(c=>(
+          <div key={c.name} style={{display:'flex',alignItems:'center',gap:8,padding:'5px 0',borderBottom:'1px solid var(--border)'}}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" style={{flexShrink:0}}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            <span style={{fontSize:11,color:'var(--text-secondary)',flex:1}}>{c.name}</span>
+            <span style={{fontSize:12,fontWeight:600,color:c.color,fontFamily:'var(--font-mono)'}}>{c.delay}</span>
+            <span style={{fontSize:10,color:'var(--text-muted)',width:50,textAlign:'right'}}>{c.trips} trips</span>
+            <span style={{fontSize:11,color:c.trend==='up'?'#EF4444':c.trend==='down'?'#22C55E':'var(--text-muted)'}}>{c.trend==='up'?'↑':c.trend==='down'?'↓':'—'}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function LocationDeviationMap({ reqLoc, actLoc, dist, dir, type, coords }) {
   const containerRef = useRef(null)
   const miniMapRef = useRef(null)
@@ -124,7 +339,7 @@ function LocationDeviationMap({ reqLoc, actLoc, dist, dir, type, coords }) {
 }
 
 const OPERATORS = {
-  'Nathaniel': {id:'MOC-04',avatar:'NB',shiftStart:'08:00',shiftDuration:'3h 12m',avgResponse:38,responseTarget:60,responseTrend:-37,alertsHandled:21,alertsOK:12,alertsEsc:2,zonesCreated:2,zoneTypes:'Concert + Flooding',tripsAssisted:15,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:1,incidentNote:'1x P2 · NURO-ONYX',etaInvestigated:6,etaBreakdown:[{label:'Traffic',count:3,color:'#22C55E'},{label:'Zone',count:2,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:2.1,fpAlerts:48,recallsIssued:1},
+  'Team Nuro Mission Operators': {id:'MOC-04',avatar:'TN',shiftStart:'08:00',shiftDuration:'3h 12m',avgResponse:38,responseTarget:60,responseTrend:-37,alertsHandled:21,alertsOK:12,alertsEsc:2,zonesCreated:2,zoneTypes:'Concert + Flooding',tripsAssisted:15,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:1,incidentNote:'1x P2 · NURO-ONYX',etaInvestigated:6,etaBreakdown:[{label:'Traffic',count:3,color:'#22C55E'},{label:'Zone',count:2,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:2.1,fpAlerts:48,recallsIssued:1},
   'Maggie': {id:'MOC-02',avatar:'MG',shiftStart:'08:00',shiftDuration:'5h 44m',avgResponse:44,responseTarget:60,responseTrend:-12,alertsHandled:34,alertsOK:29,alertsEsc:3,zonesCreated:1,zoneTypes:'Marathon',tripsAssisted:22,tripsTrend:'up',shiftUptime:98,uptimeNote:'Minor sensor lag',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:9,etaBreakdown:[{label:'Traffic',count:5,color:'#22C55E'},{label:'Zone',count:3,color:'#F59E0B'},{label:'AV',count:1,color:'#3B82F6'}],falsePositiveRate:3.2,fpAlerts:62,recallsIssued:0},
   'Brandon': {id:'MOC-07',avatar:'BR',shiftStart:'09:00',shiftDuration:'1h 20m',avgResponse:29,responseTarget:60,responseTrend:-52,alertsHandled:8,alertsOK:8,alertsEsc:0,zonesCreated:0,zoneTypes:'None yet',tripsAssisted:6,tripsTrend:'neutral',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:2,etaBreakdown:[{label:'Traffic',count:2,color:'#22C55E'},{label:'Zone',count:0,color:'#F59E0B'},{label:'AV',count:0,color:'#3B82F6'}],falsePositiveRate:0,fpAlerts:8,recallsIssued:0},
   'Jasmeen': {id:'MOC-09',avatar:'JA',shiftStart:'09:00',shiftDuration:'2h 05m',avgResponse:31,responseTarget:60,responseTrend:-48,alertsHandled:12,alertsOK:11,alertsEsc:1,zonesCreated:1,zoneTypes:'Road closure',tripsAssisted:9,tripsTrend:'up',shiftUptime:100,uptimeNote:'No degradation',incidentsFiled:0,incidentNote:'None this shift',etaInvestigated:3,etaBreakdown:[{label:'Traffic',count:2,color:'#22C55E'},{label:'Zone',count:1,color:'#F59E0B'},{label:'AV',count:0,color:'#3B82F6'}],falsePositiveRate:1.2,fpAlerts:12,recallsIssued:0}
@@ -313,7 +528,7 @@ export default function App() {
 
   const isSr = role==='sr'||role==='sv'
   const isSv = role==='sv'
-  const roleUsers = {op:'Nathaniel / MOC-04', sr:'L.Wang / MOC-11', sv:'Emily / Supervisor'}
+  const roleUsers = {op:'Team Nuro Mission Ops', sr:'L.Wang / MOC-11', sv:'Emily / Supervisor'}
   const roleTagClass = {op:'role-tag-op', sr:'role-tag-sr', sv:'role-tag-sv'}
   const roleTagText = {op:'MOC Operator', sr:'Senior MOC', sv:'Supervisor'}
 
@@ -412,7 +627,7 @@ export default function App() {
                 <div><div className="quad-title">Operator workload</div><div className="quad-sub">5 MOCs on shift · 2 need attention</div></div>
               </div>
               {[
-                {init:'NB',name:'Nathaniel',id:'MOC-04',detail:'3h 12m · Overloaded',cls:'overloaded',avcls:'av-red',load:85,alerts:5,acls:'ac-red'},
+                {init:'TN',name:'Team Nuro Mission Operators',id:'MOC-04',detail:'3h 12m · Overloaded',cls:'overloaded',avcls:'av-red',load:85,alerts:5,acls:'ac-red'},
                 {init:'MG',name:'Maggie',id:'MOC-02',detail:'5h 44m · Moderate',cls:'moderate',avcls:'av-amber',load:55,alerts:3,acls:'ac-amber'},
                 {init:'BR',name:'Brandon',id:'MOC-07',detail:'1h 20m · Available',cls:'available',avcls:'av-green',load:18,alerts:1,acls:'ac-green'},
                 {init:'JA',name:'Jasmeen',id:'MOC-09',detail:'2h 05m · Available',cls:'available',avcls:'av-green',load:12,alerts:1,acls:'ac-green'},
@@ -426,7 +641,7 @@ export default function App() {
                   <div style={{textAlign:'right'}}><div className={`alert-count ${m.acls}`}>{m.alerts}</div><div className="ac-label">alerts</div></div>
                 </div>
               ))}
-              <button className="btn btn-neutral" style={{marginTop:8}} onClick={()=>toast('2 alerts moved Nathaniel → Brandon')}>
+              <button className="btn btn-neutral" style={{marginTop:8}} onClick={()=>toast('2 alerts moved Team Nuro Ops → Brandon')}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
                 Rebalance workload
               </button>
@@ -493,6 +708,33 @@ export default function App() {
               <div style={{position:'absolute',top:12,left:12,zIndex:10,background:'rgba(7,12,24,0.85)',border:'1px solid rgba(239,68,68,0.4)',borderRadius:8,padding:'5px 10px',display:'flex',alignItems:'center',gap:6}}>
                 <div style={{width:7,height:7,borderRadius:'50%',background:'var(--red)'}}/>
                 <span style={{fontSize:11,color:'var(--red)',fontFamily:'var(--font-mono)'}}>SF Marathon zone active — expires 17:00</span>
+              </div>
+
+              {/* Profile card — top right of map */}
+              <div style={{position:'absolute',top:12,right:12,zIndex:20,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
+                <div style={{background:'rgba(13,21,38,0.95)',border:'1px solid rgba(255,255,255,0.1)',borderRadius:12,padding:'10px 14px',backdropFilter:'blur(8px)',display:'flex',alignItems:'center',gap:10,cursor:'pointer',transition:'border-color .15s',minWidth:200}}
+                  onClick={()=>setSelectedOperator(role==='op'?'Team Nuro Mission Operators':role==='sr'?'L.Wang':'Emily')}
+                  onMouseEnter={e=>e.currentTarget.style.borderColor='rgba(59,130,246,0.4)'}
+                  onMouseLeave={e=>e.currentTarget.style.borderColor='rgba(255,255,255,0.1)'}
+                  title="View my shift performance">
+                  {/* Avatar */}
+                  <div style={{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#1B6FE8,#0D4DB5)',border:'2px solid rgba(59,130,246,0.5)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,fontWeight:700,color:'#fff',flexShrink:0,position:'relative'}}>
+                    {role==='op'?'TN':role==='sr'?'LW':'EM'}
+                    <div style={{position:'absolute',bottom:0,right:0,width:10,height:10,borderRadius:'50%',background:'#22C55E',border:'2px solid #0D1526'}}/>
+                  </div>
+                  <div>
+                    <div style={{fontSize:12,fontWeight:600,color:'#F0F4FF'}}>
+                      {role==='op'?'Team Nuro Mission Ops':role==='sr'?'L. Wang':role==='sv'?'Emily':''}
+                    </div>
+                    <div style={{fontSize:10,color:'var(--text-muted)',marginTop:1}}>
+                      {role==='op'?'MOC-04 · On shift 3h 12m':role==='sr'?'Senior MOC · On shift 4h 30m':'Supervisor · Day shift'}
+                    </div>
+                    <div style={{fontSize:9,color:'var(--blue)',marginTop:2,display:'flex',alignItems:'center',gap:3}}>
+                      <div style={{width:4,height:4,borderRadius:'50%',background:'var(--blue)'}}/>
+                      View my shift stats ▸
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {selectedVehicle && (
@@ -721,7 +963,8 @@ export default function App() {
                 {/* ETA DEVIATIONS VIEW */}
                 {tripView==='eta' && (
                   <>
-                    <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:8}}>Alerts fire when ETA slips &gt;10 min. Priority scales with magnitude.</div>
+                    <ETASummary/>
+                    <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:8}}>Active alerts — fires when ETA slips &gt;10 min. Priority scales with magnitude.</div>
                     {[
                       {id:'T-2847',vid:'V-07',p:'P0',pt:'pt0',dev:'+22 min',origETA:'14:45',currETA:'15:07',route:'Mission District → SFO T2',cause:'AI Hesitation Events',root:'ai',pct:88,age:'6 min',claimed:false,rec:'AI hesitation ongoing — consider investigation'},
                       {id:'T-2851',vid:'V-03',p:'P1',pt:'pt1',dev:'+17 min',origETA:'15:10',currETA:'15:27',route:'Financial District → Caltrain',cause:'Traffic Congestion',root:'traffic',pct:68,age:'3 min',claimed:true,rec:'Traffic congestion — monitor, no action needed'},
