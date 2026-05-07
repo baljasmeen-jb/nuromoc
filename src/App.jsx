@@ -281,7 +281,7 @@ export default function App() {
       <div className="topbar">
         <div className="logo"><div className="logo-dot"/><span>NURO</span><span style={{color:'var(--text-muted)',fontWeight:300}}>MOC</span></div>
         <div className="divider"/>
-        <div className="city">San Francisco Operations</div>
+        <div className="city">San Francisco · Lucid Gravity Fleet</div>
         <div className="divider"/>
         <div className="role-switcher">
           {[['op','MOC Operator','active-op'],['sr','Senior MOC','active-sr'],['sv','Supervisor','active-sv']].map(([r,label,cls])=>(
@@ -386,7 +386,7 @@ export default function App() {
             <div style={{background:'var(--bg-surface)',overflowY:'auto',padding:16}}>
               <div className="quad-header">
                 <div className="quad-icon qi-amber"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg></div>
-                <div><div className="quad-title">Fleet health — {vehicles.length} vehicles</div><div className="quad-sub">San Francisco · Live aggregate</div></div>
+                <div><div className="quad-title">Fleet health — {vehicles.length} Lucid Gravity</div><div className="quad-sub">San Francisco · Nuro Driver™ powered</div></div>
               </div>
               <div className="fleet-chips">
                 {[['Normal',counts.normal,'var(--green)'],['Alerting',counts.alert,'var(--amber)'],['Stopped',counts.stopped,'var(--red)'],['RTB',counts.rtb,'var(--purple)']].map(([l,v,c])=>(
@@ -419,6 +419,7 @@ export default function App() {
                   <div className="vc-header">
                     <div>
                       <div className="vc-id">{selectedVehicle.id}</div>
+                      <div style={{fontSize:9,color:'var(--text-muted)',fontFamily:'var(--font-mono)',marginTop:1,letterSpacing:'0.04em'}}>LUCID GRAVITY · 2024</div>
                       <div style={{fontSize:10,color:STATUS_COLORS[selectedVehicle.status],fontFamily:'var(--font-mono)',marginTop:2}}>{STATUS_LABELS[selectedVehicle.status]}</div>
                     </div>
                     <button className="vc-close" onClick={()=>setSelectedVehicle(null)}>×</button>
@@ -605,7 +606,7 @@ export default function App() {
                 </div>
                 {searchDone && (
                   <div className="search-result">
-                    <div className="result-id">V-05 — Lucid Gravity · 8NUR-005</div>
+                    <div className="result-id">V-05 — 2024 Lucid Gravity SUV · 8NUR-005</div>
                     <div className="data-row"><span className="data-key">Location</span><span className="data-val">4th & Folsom, SoMa</span></div>
                     <div className="data-row"><span className="data-key">Status</span><span className="data-val" style={{color:'var(--red)'}}>Stopped · 4m 12s</span></div>
                     <div className="data-row"><span className="data-key">Passengers</span><span className="data-val">0 aboard</span></div>
@@ -789,7 +790,7 @@ export default function App() {
               {showModal && (
                 <div className="modal-overlay">
                   <div className="modal">
-                    <div className="modal-title">Confirm fleet RTB — {vehicles.length} vehicles</div>
+                    <div className="modal-title">Confirm fleet RTB — {vehicles.length} Lucid Gravity vehicles</div>
                     <div className="modal-sub">Review impact before commanding the entire fleet.</div>
                     <div className="modal-data">
                       <div className="data-row"><span className="data-key">Vehicles affected</span><span className="data-val">{vehicles.length} vehicles</span></div>
@@ -848,7 +849,7 @@ export default function App() {
                         <div key={v.id} className="data-row" onClick={()=>{setSelectedVehicle(v);if(map.current)map.current.flyTo({center:[v.lng,v.lat],zoom:15,duration:600})}} style={{cursor:'pointer'}}>
                           <span style={{display:'flex',alignItems:'center',gap:7,color:'var(--text-secondary)'}}>
                             <span style={{width:8,height:8,borderRadius:'50%',background:STATUS_COLORS[v.status],flexShrink:0,display:'inline-block'}}/>
-                            <span style={{fontFamily:'var(--font-mono)',fontSize:11}}>{v.id}</span>
+                            <span style={{fontFamily:'var(--font-mono)',fontSize:11}}>{v.id}</span><span style={{fontSize:9,color:'var(--text-muted)',marginLeft:4}}>Gravity</span>
                           </span>
                           <span style={{color:v.status==='stopped'?'var(--red)':v.status==='alert'?'var(--amber)':v.status==='rtb'?'var(--purple)':'var(--text-muted)',fontSize:10}}>{v.zone}</span>
                         </div>
