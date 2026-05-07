@@ -148,8 +148,8 @@ export default function App() {
   }
 
   const ALERTS = [
-    {id:1,p:'P0',pt:'pt0',cls:'alert-p0',title:'V-05 stopped — SoMa',meta:'Conf 64% · Unknown obstruction',age:'4m',mod:'responder'},
-    {id:2,p:'P0',pt:'pt0',cls:'alert-p0',title:'V-33 stopped — Chinatown',meta:'Conf 61% · Route blocked',age:'2m',mod:'responder'},
+    {id:1,p:'P0',pt:'pt0',cls:'alert-p0',title:'V-05 stopped — SoMa',meta:'Battery 64% · Unknown obstruction',age:'4m',mod:'responder'},
+    {id:2,p:'P0',pt:'pt0',cls:'alert-p0',title:'V-33 stopped — Chinatown',meta:'Battery 61% · Route blocked',age:'2m',mod:'responder'},
     {id:3,p:'P1',pt:'pt1',cls:'alert-p1',title:'ETA +18 min — T-2847',meta:'V-07 · Mission District · AI hesitation',age:'6m',mod:'trip'},
     {id:4,p:'P1',pt:'pt1',cls:'alert-p1',title:'ETA +11 min — T-2851',meta:'V-03 · Financial District · Traffic',age:'3m',mod:'trip'},
     {id:5,p:'P2',pt:'pt2',cls:'alert-p2',title:'Dropoff deviation +143m',meta:'T-2839 · V-15 · Potrero Hill',age:'12m',mod:'trip'},
@@ -307,7 +307,7 @@ export default function App() {
                     {['FRONT','REAR','LEFT','RIGHT'].map(l=><CamFeed key={l} label={l}/>)}
                   </div>
                   <div className="stat-row"><span className="stat-key">Speed</span><span className="stat-val">{selectedVehicle.speed} mph</span></div>
-                  <div className="stat-row"><span className="stat-key">AI confidence</span><span className="stat-val" style={{color:selectedVehicle.conf<70?'var(--red)':selectedVehicle.conf<80?'var(--amber)':'var(--green)'}}>{selectedVehicle.conf}%</span></div>
+                  <div className="stat-row"><span className="stat-key">Battery</span><span className="stat-val" style={{color:selectedVehicle.conf<30?'var(--red)':selectedVehicle.conf<50?'var(--amber)':'var(--green)'}}>{selectedVehicle.conf}%</span></div>
                   <div className="stat-row"><span className="stat-key">Heading</span><span className="stat-val">{selectedVehicle.heading}°</span></div>
                   <div className="vc-actions">
                     <button className="vc-btn" onClick={()=>toast(`Investigating ${selectedVehicle.id}`)}>Investigate</button>
