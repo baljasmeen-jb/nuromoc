@@ -621,30 +621,82 @@ export default function App() {
                   <div className="panel-title">Trip intelligence</div>
                   <div className="panel-badge" style={{background:'var(--amber-dim)',color:'var(--amber)'}}>3 ETA · 1 location</div>
                 </div>
-                <div className="sec-label">ETA deviation queue</div>
+
+                <div className="sec-label">M5-01 — ETA deviation queue</div>
+                <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:8}}>Alerts fire when ETA slips &gt; 10 min. Priority scales with magnitude.</div>
+
                 {[
-                  {id:'T-2847',vid:'V-07',dev:'+18 min',pt:'pt0',route:'Mission District → SFO T2',cause:'AI hesitation events (3)',pct:72,hi:true,age:'6 min'},
-                  {id:'T-2851',vid:'V-03',dev:'+11 min',pt:'pt1',route:'Financial District → Caltrain',cause:'Traffic congestion',pct:44,hi:false,age:'3 min'},
+                  {id:'T-2847',vid:'V-07',p:'P0',pt:'pt0',dev:'+22 min',origETA:'14:45',currETA:'15:07',route:'Mission District → SFO T2',cause:'AI Hesitation Events',root:'ai',pct:88,age:'6 min',claimed:false,rec:'AI hesitation ongoing — consider investigation'},
+                  {id:'T-2851',vid:'V-03',p:'P1',pt:'pt1',dev:'+17 min',origETA:'15:10',currETA:'15:27',route:'Financial District → Caltrain',cause:'Traffic Congestion',root:'traffic',pct:68,age:'3 min',claimed:true,rec:'Zone impact — no action needed, vehicle rerouting'},
+                  {id:'T-2863',vid:'V-26',p:'P2',pt:'pt2',dev:'+11 min',origETA:'15:30',currETA:'15:41',route:'Outer Sunset → Union Square',cause:'Zone Blockage Impact',root:'zone',pct:44,age:'8 min',claimed:false,rec:'Zone impact — no action needed, vehicle rerouting'},
                 ].map(t=>(
-                  <div key={t.id} className="trip-card" onClick={()=>toast(`Opening ${t.id} investigation`)}>
-                    <div className="trip-header"><span className={`priority-tag ${t.pt}`}>{t.dev}</span><span className="trip-id">{t.id} · {t.vid}</span><span className="alert-age">{t.age}</span></div>
-                    <div className="dev-bar"><div className={`dev-fill ${t.hi?'df-high':'df-med'}`} style={{width:`${t.pct}%`}}/></div>
-                    <div className="trip-route">{t.route}</div>
-                    <div className="cause-chip">{t.cause}</div>
+                  <div key={t.id} style={{background:'var(--bg-elevated)',border:'1px solid var(--border)',borderRadius:'var(--r-lg)',padding:12,marginBottom:8,borderLeftWidth:3,borderLeftColor:t.pt==='pt0'?'var(--red)':t.pt==='pt1'?'var(--amber)':'var(--purple)'}}>
+                    <div style={{display:'flex',alignItems:'center',gap:6,marginBottom:6}}>
+                      <span className={`priority-tag ${t.pt}`}>{t.p} {t.dev}</span>
+                      <span style={{fontSize:12,fontWeight:500,color:'var(--text-primary)',fontFamily:'var(--font-mono)'}}>{t.id} · {t.vid}</span>
+                      <span style={{marginLeft:'auto',fontSize:10,color:'var(--text-muted)',fontFamily:'var(--font-mono)'}}>{t.age}</span>
+                    </div>
+                    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4,marginBottom:6}}>
+                      <div style={{fontSize:10,color:'var(--text-muted)'}}>Original ETA: <span style={{color:'var(--text-primary)',fontFamily:'var(--font-mono)'}}>{t.origETA}</span></div>
+                      <div style={{fontSize:10,color:'var(--text-muted)'}}>Current ETA: <span style={{color:'var(--red)',fontFamily:'var(--font-mono)'}}>{t.currETA}</span></div>
+                    </div>
+                    <div style={{height:3,background:'var(--bg-card)',borderRadius:2,marginBottom:6}}><div style={{height:'100%',borderRadius:2,background:t.pt==='pt0'?'var(--red)':t.pt==='pt1'?'var(--amber)':'var(--purple)',width:`${t.pct}%`}}/></div>
+                    <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:6}}>{t.route}</div>
+                    <div style={{display:'flex',alignItems:'center',gap:6,flexWrap:'wrap'}}>
+                      <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'var(--bg-card)',color:'var(--text-muted)',border:'1px solid var(--border)'}}>{t.cause}</span>
+                      {t.claimed && <span style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'rgba(59,130,246,0.12)',color:'var(--blue)',border:'1px solid rgba(59,130,246,0.2)'}}>Claimed</span>}
+                      {!t.claimed && <button style={{fontSize:10,padding:'2px 8px',borderRadius:20,background:'var(--bg-elevated)',color:'var(--text-secondary)',border:'1px solid var(--border)',cursor:'pointer'}} onClick={()=>toast(`T-${t.id} claimed — removed from unassigned queue`)}>Claim</button>}
+                    </div>
+
+                    <div style={{marginTop:10,background:'var(--bg-card)',borderRadius:8,padding:10}}>
+                      <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>M5-02 — Root cause investigation</div>
+                      <div style={{display:'flex',gap:6,marginBottom:6,flexWrap:'wrap'}}>
+                        {[{l:'Traffic Congestion',c:t.root==='traffic'},{l:'Zone Blockage Impact',c:t.root==='zone'},{l:'AI Hesitation Events',c:t.root==='ai'},{l:'Sensor Degradation',c:false},{l:'Unknown',c:false}].map(r=>(
+                          <span key={r.l} style={{fontSize:9,padding:'2px 7px',borderRadius:20,background:r.c?'rgba(59,130,246,0.15)':'var(--bg-elevated)',color:r.c?'var(--blue)':'var(--text-muted)',border:`1px solid ${r.c?'rgba(59,130,246,0.3)':'var(--border)'}`,fontWeight:r.c?600:400}}>{r.l}{r.c?' ✓':''}</span>
+                        ))}
+                      </div>
+                      {t.root==='ai' && (
+                        <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:6}}>
+                          <span style={{color:'var(--amber)'}}>● </span>Hesitation 1 — 14:39 — conf 58% &nbsp;
+                          <span style={{color:'var(--red)'}}>● </span>Hesitation 2 — 14:44 — conf 41% &nbsp;
+                          <span style={{color:'var(--red)'}}>● </span>Hesitation 3 — 14:51 — conf 38% (ongoing)
+                        </div>
+                      )}
+                      <div style={{fontSize:10,background:'rgba(59,130,246,0.08)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:6,padding:'6px 8px',color:'#93C5FD',marginBottom:8}}>
+                        <strong>Recommended action:</strong> {t.rec}
+                      </div>
+                      <div style={{fontSize:10,color:'var(--text-muted)',marginBottom:4}}>Resolution classification (required to close):</div>
+                      <div style={{display:'flex',gap:4,flexWrap:'wrap',marginBottom:t.dev.includes('2')||t.dev.includes('1')?8:0}}>
+                        {['No action needed','Operator action taken','Escalated to engineering'].map(c=>(
+                          <span key={c} className={`cause-btn ${causeSel===t.id+c?'selected':''}`} onClick={()=>{setCauseSel(t.id+c);toast(`${t.id} classified: ${c}`)}}>{c}</span>
+                        ))}
+                      </div>
+                      {(t.pt==='pt0'||t.pt==='pt1') && (
+                        <div style={{marginTop:8,paddingTop:8,borderTop:'1px solid var(--border)'}}>
+                          <div style={{fontSize:10,fontWeight:600,color:'var(--text-secondary)',textTransform:'uppercase',letterSpacing:'0.06em',marginBottom:6}}>M5-03 — Passenger notification (ETA &gt; 15 min)</div>
+                          <select className="form-select" style={{marginBottom:6,fontSize:11}} aria-label="Notification template">
+                            <option>— Select pre-approved template —</option>
+                            <option>Minor delay — we apologize for the inconvenience</option>
+                            <option>Significant delay — your driver is navigating a traffic event</option>
+                            <option>Major delay — you may choose to cancel at no charge</option>
+                          </select>
+                          <button className="btn btn-primary" style={{marginBottom:0,fontSize:11}} onClick={()=>toast(`Notification sent via Uber API for ${t.id} — delivery confirmed ✓`)}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            Send via Uber — templates only, no free text
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
-                <div className="sec-label" style={{marginTop:10}}>Classify root cause</div>
-                {['No action needed','Action taken','Escalate to engineering'].map(c=>(
-                  <span key={c} className={`cause-btn ${causeSel===c?'selected':''}`} onClick={()=>{setCauseSel(c);toast(`Classified: ${c}`)}}>{c}</span>
-                ))}
+
                 <div className="sec-label" style={{marginTop:12}}>Location deviations</div>
-                <div className="trip-card" onClick={()=>toast('Opening T-2839 location investigation')}>
+                <div className="trip-card" onClick={()=>toast('Opening T-2839 location deviation investigation')}>
                   <div className="trip-header"><span className="priority-tag pt2" style={{background:'var(--purple-dim)',color:'var(--purple)'}}>+143m</span><span className="trip-id">T-2839 · V-15</span><span className="alert-age">Completed</span></div>
-                  <div className="trip-route">Dropoff deviation — Potrero Hill</div>
+                  <div className="trip-route">Dropoff deviation — Potrero Hill · No stopping zone detected</div>
                   <div className="cause-chip">Unclassified — needs review</div>
                 </div>
               </div>
-
               {showModal && (
                 <div className="modal-overlay">
                   <div className="modal">
